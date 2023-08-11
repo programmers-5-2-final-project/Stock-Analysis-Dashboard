@@ -1,0 +1,6 @@
+dags/api/test_api/
+dags/data
+logs/
+dags/api/data/
+dags/__pycache__/
+*.env

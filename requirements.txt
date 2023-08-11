@@ -1,0 +1,6 @@
+py4j==0.10.9.5
+numpy   
+pandas
+Django
+requests
+finance-datareader
