@@ -1,5 +1,6 @@
 logs/
 dags/__pycache__/
 *.env
+data/
+tmp/
 test/
-plugins/
