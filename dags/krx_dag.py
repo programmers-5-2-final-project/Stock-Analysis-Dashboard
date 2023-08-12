@@ -60,7 +60,7 @@ def load_krx_stock_to_s3(_transform_krx_stock, symbol):
     krx_stock_data = open(f"./data/krx_stock_{symbol}.csv", "rb")
     s3.Bucket("de-5-2").put_object(Key=f"krx_stock_{symbol}.csv", Body=krx_stock_data)
     return True
-
+#
 @task
 def load_krx_stock_to_rds_from_s3(_load_krx_stock_to_s3, symbol):
     task_logger.info(f"Load krx_stock_to_rds_from_s3_{symbol}")

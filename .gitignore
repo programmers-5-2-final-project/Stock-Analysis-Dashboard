@@ -1,10 +1,5 @@
-api/
-dags/
 logs/
-dags/
 dags/__pycache__/
 *.env
-data/
-tmp/
 test/
 plugins/
