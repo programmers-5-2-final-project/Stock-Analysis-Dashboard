@@ -24,7 +24,7 @@ import logging
 ✨Dag 특징
 1. PythonOperator만 사용. 다음 스프린트때는 다른 오퍼레이터(ex. S3HookOperator)도 사용할 예정입니다.
 2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
-3. task간 데이터 이동은 .csv로 로컬에 저장한 후 다시 DataFrame으로 불러오는 방식입니다.
+3. task간 데이터 이동은 .csv로 로컬에 저장한 후 다시 DataFrame으로 불러오는 방식입니다. 단 krx_list는 xcom방식입니다.
 4. 하루단위로 실행. api 자체가 2003.01.01 부터 추출할 수 있어서 start_date를 하루전으로 설정했습니다.
 
 '''
@@ -62,7 +62,7 @@ def transform_krx_stock(krx_list): # 기업 단위로 추출한 주식데이터 
         task_logger.info(f"Transform krx_stock_{symbol}")
         raw_df = pd.read_csv(f"./tmp/krx_stock_{symbol}.csv") # 저장된 데이터를 다시 DataFrame으로 불러옴
         transformed_df = raw_df.drop(columns=["Change"]) # Change 컬럼 제거
-        transformed_df = transformed_df.dropna() # Nan값이 있는 행은 제거
+        transformed_df = transformed_df.dropna() # Nan값이 있는 행은 제거 -> 날짜가 중간중간 빔 -> 다음 스프린트때 수정필요
         transformed_df.to_csv(f"./data/krx_stock_{symbol}.csv", index=False) # 다음 테스크로 데이터를 이동시키기 위해 csv 파일로 저장.
     return krx_list
 
