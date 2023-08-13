@@ -1,5 +1,8 @@
 logs/
 dags/__pycache__/
+api/__pycache__/
+plugins/
+config/
 *.env
 data/
 tmp/

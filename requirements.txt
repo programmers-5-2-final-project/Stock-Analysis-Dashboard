@@ -3,4 +3,5 @@ numpy
 pandas
 Django
 requests
+sqlalchemy<2.0
 finance-datareader

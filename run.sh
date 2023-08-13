@@ -14,4 +14,19 @@ if [ ! -d "dags" ]; then
     chmod -R 777 ./dags
     echo "create dags folder"
 fi
+if [ ! -d "data" ]; then
+    mkdir ./data
+    chmod -R 777 ./data
+    echo "create data folder"
+fi
+if [ ! -d "tmp" ]; then
+    mkdir ./tmp
+    chmod -R 777 ./tmp
+    echo "create tmp folder"
+fi
+if [ ! -d "config" ]; then
+    mkdir ./config
+    chmod -R 777 ./config
+    echo "create config folder"
+fi
 docker-compose -f ./docker-compose.yaml up --build
