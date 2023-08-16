@@ -77,7 +77,7 @@ CACHE_CONFIG = {
     "CACHE_REDIS_DB": REDIS_RESULTS_DB,
 }
 DATA_CACHE_CONFIG = CACHE_CONFIG
-SECRET_KEY = "7QmvjgS1q3vMpg5DTnVU+7XjajOxbSzju6b9E8F1nkAicw5Lhaenqg10"
+
 
 class CeleryConfig:
     broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
@@ -113,6 +113,7 @@ WEBDRIVER_BASEURL = "http://superset:8088/"
 WEBDRIVER_BASEURL_USER_FRIENDLY = WEBDRIVER_BASEURL
 
 SQLLAB_CTAS_NO_LIMIT = True
+
 
 #
 # Optionally import superset_config_docker.py (which will have been included on
