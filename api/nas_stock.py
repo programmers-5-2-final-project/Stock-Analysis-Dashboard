@@ -5,7 +5,6 @@ import concurrent.futures
 import os
 import time
 
-
 def extract(task_logger):
     nas_list_filepath = "./data/nas_list.csv"
     nas_stock_filepath = "./data/nas_stock.csv"
@@ -15,7 +14,7 @@ def extract(task_logger):
     task_logger.info(nas_Symbols)
 
     # CSV 파일의 column 설정 
-    new_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume']
+    new_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Adj_Close', 'Volume']
     df = pd.DataFrame(columns=new_columns)
 
     # 수정된 DataFrame을 다시 CSV 파일로 저장
