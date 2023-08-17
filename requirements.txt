@@ -6,3 +6,4 @@ requests
 sqlalchemy<2.0
 finance-datareader
 quandl
+billiard

@@ -11,6 +11,7 @@ from sqlalchemy import create_engine, text
 import FinanceDataReader as fdr
 from dotenv import dotenv_values
 import logging
+import billiard as mp
 
 '''
 ✨전체적인 흐름
@@ -41,6 +42,13 @@ def delete_s3bucket_objects(s3, symbol): # S3에 저장된 객체를 삭제하�
     else:    
         task_logger.info(f"Failed delete krx_stock_{symbol}.csv ")
 
+
+def extract_krx_stock_and_load_to_s3(code):
+    task_logger.info(f"Extract krx_stock_{code}")
+    raw_df = fdr.DataReader(code, "2003")
+    raw_df["Code"] = code
+    raw_df.to_csv(f"./tmp/krx_stock.csv", mode="a", index=True, header=False)
+
 @task
 def extract_krx_list():  # KRX(코스피, 코스닥, 코스넷)에 상장되어 있는 현재 기업의 심볼을 추출 테스크
     task_logger.info("Extract_krx_list")
@@ -56,12 +64,11 @@ def extract_krx_list():  # KRX(코스피, 코스닥, 코스넷)에 상장되어 
 def extract_krx_stock(krx_list): # 기업 단위로 주식데이터 추출 테스크
     new_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Change','Code']
     df = pd.DataFrame(columns=new_columns)
-    df.to_csv("./tmp/krx_stock.csv", index=False) 
-    for code in krx_list:
-        task_logger.info(f"Extract krx_stock_{code}")
-        raw_df = fdr.DataReader(code, "2003")
-        raw_df["Code"] = code
-        raw_df.to_csv(f"./tmp/krx_stock.csv", mode="a", index=True, header=False) # 다음 테스크로 데이터를 이동시키기 위해 csv 파일로 저장.
+    df.to_csv("./tmp/krx_stock.csv", index=False)
+    cpu_count = mp.cpu_count() - 2
+    with mp.Pool(cpu_count) as pool:
+        pool.map(extract_krx_stock_and_load_to_s3, krx_list)
+
     return True
 
 @task
@@ -128,7 +135,7 @@ def load_krx_stock_to_rds_from_s3(_): # 기업 단위로 S3에 적재한 주식�
     return True
 
 with DAG(
-    dag_id="krx_stock_dag11", # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
+    dag_id="krx_stock_dag15", # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
     schedule = '0 0 * * *', # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date = days_ago(1) # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:
