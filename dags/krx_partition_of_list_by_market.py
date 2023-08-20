@@ -1,12 +1,12 @@
 '''
 ✨전체적인 흐름
 
-raw_data.krx_list -> analytics.kospi_list, analytics.kosdaq_list, analytics.konex_list
+raw_data.krx_list & raw_data.krx_co_info -> analytics.krx_partition_of_list_by_market
 postgres partition으로 분리, 의존성도 있고 메모리 자원도 아낌, 즉 데이터를 효율적으로 관리.
 
-1. raw_data.krx_list를 copy한 analytics.krx_partition_of_list_by_market 테이블 생성
-2. 생성한 테이블의 market key의 kospi, (kosdaq, kosdaq global), konex 로 파티션 analytics.kospi_list, analytics.kosdaq_list, analytics.konex_list 테이블 생성
-3. raw_data.krx_list 부터 analytics.krx_partition_of_list_by_market에 insert 
+1. raw_data.krx_list.*, raw_data.krx_co_info.* 로 세팅된 analytics.krx_partition_of_list_by_market 테이블 선언
+2. 생성한 테이블의 market key의 kospi, kosdaq, konex 로 파티션 테이블 생성
+3. raw_data.krx_list raw_data.krx_co_info를 조인한 테이블로 부터 analytics.krx_partition_of_list_by_market에 insert 
 
 
 
@@ -63,6 +63,13 @@ def create_table():
                         Marcap BIGINT,
                         Stocks BIGINT,
                         MarketId VARCHAR(40),
+                        sector VARCHAR(40),
+                        industry VARCHAR(300),
+                        listingdate TIMESTAMP,
+                        settlemonth VARCHAR(40),
+                        representative VARCHAR(300),
+                        homepage VARCHAR(300),
+                        region VARCHAR(40),
                         CONSTRAINT PK_krx_partition_of_list_by_market PRIMARY KEY(code, market)
                 ) PARTITION BY LIST(market);
                        """))
@@ -96,13 +103,25 @@ def create_partitioned_tables(_):
 def insert_into_table(_):
     task_logger.info("insert into table from raw_data.krx_list")
     engine.execute(text("""
-                INSERT INTO analytics.krx_partition_of_list_by_market
-                    SELECT * FROM raw_data.krx_list;
+                WITH joined_table_krx_list_co_info
+                        AS (SELECT krx_list.*, 
+                                krx_co_info.sector, 
+                                krx_co_info.industry, 
+                                krx_co_info.listingdate, 
+                                krx_co_info.settlemonth, 
+                                krx_co_info.representative, 
+                                krx_co_info.homepage, 
+                                krx_co_info.region
+                                FROM raw_data.krx_list AS krx_list
+                                LEFT JOIN raw_data.krx_co_info AS krx_co_info
+                                ON krx_list.code = krx_co_info.code)
+                    INSERT INTO analytics.krx_partition_of_list_by_market
+                        SELECT * FROM joined_table_krx_list_co_info;
                         """))
     return True
 
 with DAG(
-    dag_id="krx_partition_of_list_by_market3", 
+    dag_id="krx_partition_of_list_by_market4", 
     schedule = '0 0 * * *', # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date = days_ago(1) # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:
