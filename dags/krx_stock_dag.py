@@ -77,6 +77,7 @@ def transform_krx_stock(_): # 기업 단위로 추출한 주식데이터 전처�
     transformed_df = raw_df.drop(columns=["Change"]) # Change 컬럼 제거
     transformed_df.dropna(subset=['Date', 'Code'])
     transformed_df.fillna(method = 'ffill', inplace=True)
+    transformed_df['Code'] = transformed_df['Code'].apply(lambda x: str(x).zfill(6))
     new_columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Code']
     df = pd.DataFrame(columns=new_columns)
     df.to_csv("./data/krx_stock.csv", index=False)
@@ -135,7 +136,7 @@ def load_krx_stock_to_rds_from_s3(_): # 기업 단위로 S3에 적재한 주식�
     return True
 
 with DAG(
-    dag_id="krx_stock_dag15", # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
+    dag_id="krx_stock_dag18", # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
     schedule = '0 0 * * *', # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date = days_ago(1) # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:
