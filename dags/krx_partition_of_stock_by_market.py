@@ -4,8 +4,8 @@
 joined table raw_data.krx_stock & raw_data.krx_list -> analytics.kospi_stock, analytics.kosdaq_stock, analytics.konex_stock
 postgres partition으로 분리, 의존성도 있고 메모리 자원도 아낌, 즉 데이터를 효율적으로 관리.
 
-1. raw_data.krx_stock.*, raw_data.krx_list.name, market, marcap 로 세팅된 analytics.krx_partition_of_stock_by_market 테이블 선언
-2. 선언한 테이블의 market key의 kospi, (kosdaq, kosdaq global), konex 로 파티션 analytics.kospi_stock, analytics.kosdaq_stock, analytics.konex_stock 테이블 선언
+1. raw_data.krx_stock.*, raw_data.krx_list.name, market, marcap 로 세팅된 analytics.krx_partition_of_stock_by_market 테이블 생성
+2. 생성한 테이블의 market key의 kospi, (kosdaq, kosdaq global), konex 로 파티션 analytics.kospi_stock, analytics.kosdaq_stock, analytics.konex_stock 테이블 생성
 3. raw_data.krx_stock 과 raw_data.krx_list를 inner join한 테이블을 analytics.krx_partition_of_stock_by_market 에 insert
 
 
