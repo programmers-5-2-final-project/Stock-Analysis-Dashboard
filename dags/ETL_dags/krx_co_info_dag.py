@@ -51,7 +51,7 @@ def delete_s3bucket_objects(s3, symbol):
 def extract_krx_co_info():
     task_logger.info("Extract_krx_co_info")
     sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import extract_krx_co_info  # krx_co_info api 모듈
+    from dags.ETL_dags.common_package import extract_krx_co_info  # krx_co_info api 모듈
 
     raw_df = extract_krx_co_info.extract()
     task_logger.info("raw_df.columns", raw_df.columns.tolist())

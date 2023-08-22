@@ -49,7 +49,7 @@ def delete_s3bucket_objects(s3, symbol):  # S3에 저장된 객체를 삭제하�
 def extract_krx_list():  # KRX(코스피, 코스닥, 코스넷)에 상장되어 있는 현재 기업의 심볼을 추출 테스크
     task_logger.info("Extract_krx_list")
     sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import krx_list  # krx_list api 모듈
+    from dags.ETL_dags.common_package import krx_list  # krx_list api 모듈
 
     krx_list_df = krx_list.extract()
     krx_list_df.to_csv(

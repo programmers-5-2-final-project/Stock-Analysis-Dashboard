@@ -69,7 +69,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/tmp:/opt/airflow/tmp
   env_file:
     - ${AIRFLOW_PROJ_DIR:-.}/.env
-  user: "${AIRFLOW_UID:-50000}:0"
+  user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-0}"
   depends_on:
     &airflow-common-depends-on
     redis:
