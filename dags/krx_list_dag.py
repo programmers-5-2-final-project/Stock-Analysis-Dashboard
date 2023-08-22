@@ -1,3 +1,28 @@
+doc_md = """
+### krx_list_dag
+
+#### 전체적인 흐름
+
+1. KRX(코스피, 코스닥, 코스넷)에 상장된 기업들 추출
+2. 추출한 데이터 처리. Code or Name가 Nan인 행렬은 삭제 처리
+3. .csv 파일을 s3에 적재
+4. s3 -> rds에 적재
+
+#### Dag 특징
+1. PythonOperator만 사용. 다음 스프린트때는 다른 오퍼레이터(ex. S3HookOperator)도 사용할 예정입니다.
+2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
+3. task간 데이터 이동은 .csv로 로컬에 저장한 후 다시 DataFrame으로 불러오는 방식입니다.
+
+#### Domain 특징
+1. http://data.krx.co.kr/comm/bldAttendant/executeForResourceBundle.cmd?baseName=krx.mdc.i18n.component&key=B128.bld
+2. cols_map = {'ISU_SRT_CD':'Code', 'ISU_ABBRV':'Name', 
+                'TDD_CLSPRC':'Close', 'SECT_TP_NM': 'Dept', 'FLUC_TP_CD':'ChangeCode', 
+                'CMPPREVDD_PRC':'Changes', 'FLUC_RT':'ChagesRatio', 'ACC_TRDVOL':'Volume', 
+                'ACC_TRDVAL':'Amount', 'TDD_OPNPRC':'Open', 'TDD_HGPRC':'High', 'TDD_LWPRC':'Low',
+                'MKTCAP':'Marcap', 'LIST_SHRS':'Stocks', 'MKT_NM':'Market', 'MKT_ID': 'MarketId' }
+
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.decorators import task
@@ -12,28 +37,6 @@ import FinanceDataReader as fdr
 from dotenv import dotenv_values
 import logging
 
-"""
-✨전체적인 흐름
-
-1. KRX(코스피, 코스닥, 코스넷)에 상장된 기업들 추출
-2. 추출한 데이터 처리. Code or Name가 Nan인 행렬은 삭제 처리
-3. .csv 파일을 s3에 적재
-4. s3 -> rds에 적재
-
-✨Dag 특징
-1. PythonOperator만 사용. 다음 스프린트때는 다른 오퍼레이터(ex. S3HookOperator)도 사용할 예정입니다.
-2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
-3. task간 데이터 이동은 .csv로 로컬에 저장한 후 다시 DataFrame으로 불러오는 방식입니다.
-
-✨Domain 특징
-1. http://data.krx.co.kr/comm/bldAttendant/executeForResourceBundle.cmd?baseName=krx.mdc.i18n.component&key=B128.bld
-2. cols_map = {'ISU_SRT_CD':'Code', 'ISU_ABBRV':'Name', 
-                'TDD_CLSPRC':'Close', 'SECT_TP_NM': 'Dept', 'FLUC_TP_CD':'ChangeCode', 
-                'CMPPREVDD_PRC':'Changes', 'FLUC_RT':'ChagesRatio', 'ACC_TRDVOL':'Volume', 
-                'ACC_TRDVAL':'Amount', 'TDD_OPNPRC':'Open', 'TDD_HGPRC':'High', 'TDD_LWPRC':'Low',
-                'MKTCAP':'Marcap', 'LIST_SHRS':'Stocks', 'MKT_NM':'Market', 'MKT_ID': 'MarketId' }
-
-"""
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -199,6 +202,7 @@ def load_krx_list_to_rds_from_s3(_):
 
 with DAG(
     dag_id="krx_list_dag13",
+    doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:

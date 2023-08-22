@@ -1,19 +1,19 @@
-"""
-✨전체적인 흐름
+doc_md = """
+### krx_partition_of_list_by_market dag
 
-raw_data.krx_list & raw_data.krx_co_info -> analytics.krx_partition_of_list_by_market
-postgres partition으로 분리, 의존성도 있고 메모리 자원도 아낌, 즉 데이터를 효율적으로 관리.
+#### 전체적인 흐름
 
-1. raw_data.krx_list.*, raw_data.krx_co_info.* 로 세팅된 analytics.krx_partition_of_list_by_market 테이블 선언
-2. 생성한 테이블의 market key의 kospi, kosdaq, konex 로 파티션 테이블 생성
-3. raw_data.krx_list raw_data.krx_co_info를 조인한 테이블로 부터 analytics.krx_partition_of_list_by_market에 insert 
+1. KRX(코스피, 코스닥, 코스넷)에 상장되어 있는 현재 기업의 심볼을 추출
+2. 기업 단위로 주식데이터 추출 후
+3. 기업 단위로 추출한 주식데이터 전처리
+4. 기업 단위로 주식데이터 S3에 적재
+5. 기업 단위로 S3에 적재한 주식데이터를 RDS(DW)에 COPY
 
-
-
-✨Dag 특징
+#### Dag 특징
 1. PythonOperator만 사용. 다음 스프린트때는 다른 오퍼레이터(ex. S3HookOperator)도 사용할 예정입니다.
 2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
-3. query 문으로 작업
+3. task간 데이터 이동은 .csv로 로컬에 저장한 후 다시 DataFrame으로 불러오는 방식입니다. 단 krx_list는 xcom방식입니다.
+4. 하루단위로 실행. api 자체가 2003.01.01 부터 추출할 수 있어서 start_date를 하루전으로 설정했습니다.
 
 """
 
@@ -150,6 +150,7 @@ def insert_into_table(_):
 
 with DAG(
     dag_id="krx_partition_of_list_by_market4",
+    doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:

@@ -1,5 +1,7 @@
-"""
-✨전체적인 흐름
+doc_md = """
+### krx_partition_of_stock_by_code dag
+
+#### 전체적인 흐름
 
 raw_data.krx_stock -> analytics.krx_stock_{code}
 postgres partition으로 분리, 의존성도 있고 메모리 자원도 아낌, 즉 데이터를 효율적으로 관리.
@@ -11,7 +13,7 @@ postgres partition으로 분리, 의존성도 있고 메모리 자원도 아낌,
 
 
 
-✨Dag 특징
+#### Dag 특징
 1. PythonOperator만 사용. 다음 스프린트때는 다른 오퍼레이터(ex. S3HookOperator)도 사용할 예정입니다.
 2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
 3. query 문으로 작업
@@ -119,6 +121,7 @@ def insert_into_table(_):
 
 with DAG(
     dag_id="krx_partition_of_stock_by_code2",
+    doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:

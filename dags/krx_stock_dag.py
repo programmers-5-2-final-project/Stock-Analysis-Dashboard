@@ -1,3 +1,25 @@
+doc_md = """
+### krx_stock dag
+
+#### 전체적인 흐름
+
+1. KRX(코스피, 코스닥, 코스넷)에 상장되어 있는 기업의 심볼 가져오기. raw_data.krx_list에서 가져옴
+2. 주식데이터 추출
+3. 추출한 주식데이터 처리.
+4. .csv 파일을 s3에 적재
+5. S3->RDS 적재
+
+#### Dag 특징
+1. PythonOperator만 사용. 다음 스프린트때는 다른 오퍼레이터(ex. S3HookOperator)도 사용할 예정입니다.
+2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
+3. task간 데이터 이동은 .csv로 로컬에 저장한 후 다시 DataFrame으로 불러오는 방식입니다. 단 krx_list는 xcom방식입니다.
+4. 하루단위로 실행. api 자체가 2003.01.02 부터 추출할 수 있어서 start_date를 하루전으로 설정했습니다.
+
+#### Domain 특징
+1. https://fchart.stock.naver.com/sise.nhn?timeframe=day&count=6000&requestType=0&symbol=
+2. ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'] + 'Change'
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.decorators import task
@@ -13,25 +35,6 @@ from dotenv import dotenv_values
 import logging
 import billiard as mp
 
-"""
-✨전체적인 흐름
-
-1. KRX(코스피, 코스닥, 코스넷)에 상장되어 있는 기업의 심볼 가져오기. raw_data.krx_list에서 가져옴
-2. 주식데이터 추출
-3. 추출한 주식데이터 처리.
-4. .csv 파일을 s3에 적재
-5. S3->RDS 적재
-
-✨Dag 특징
-1. PythonOperator만 사용. 다음 스프린트때는 다른 오퍼레이터(ex. S3HookOperator)도 사용할 예정입니다.
-2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
-3. task간 데이터 이동은 .csv로 로컬에 저장한 후 다시 DataFrame으로 불러오는 방식입니다. 단 krx_list는 xcom방식입니다.
-4. 하루단위로 실행. api 자체가 2003.01.02 부터 추출할 수 있어서 start_date를 하루전으로 설정했습니다.
-
-✨Domain 특징
-1. https://fchart.stock.naver.com/sise.nhn?timeframe=day&count=6000&requestType=0&symbol=
-2. ['Date', 'Open', 'High', 'Low', 'Close', 'Volume'] + 'Change'
-"""
 
 task_logger = logging.getLogger(
     "airflow.task"
@@ -162,6 +165,7 @@ def load_krx_stock_to_rds_from_s3(_):  # 기업 단위로 S3에 적재한 주식
 
 with DAG(
     dag_id="krx_stock_dag18",  # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
+    doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:
