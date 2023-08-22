@@ -34,7 +34,7 @@ from sqlalchemy import create_engine, text
 import FinanceDataReader as fdr
 from dotenv import dotenv_values
 import logging
-
+from ETL_dags.common_package.extract_krx_co_info import extract  # krx_co_info api 모듈
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -50,10 +50,8 @@ def delete_s3bucket_objects(s3, symbol):
 @task
 def extract_krx_co_info():
     task_logger.info("Extract_krx_co_info")
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import extract_krx_co_info  # krx_co_info api 모듈
 
-    raw_df = extract_krx_co_info.extract()
+    raw_df = extract()
     task_logger.info("raw_df.columns", raw_df.columns.tolist())
     task_logger.info("raw_df.iloc[0]", raw_df.iloc[0].tolist())
     task_logger.info("raw_df.iloc[1]", raw_df.iloc[1].tolist())
@@ -182,7 +180,7 @@ def load_krx_co_info_to_rds_from_s3(_):
 
 
 with DAG(
-    dag_id="krx_co_info_dag5",
+    dag_id="krx_co_info_dag7",
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.

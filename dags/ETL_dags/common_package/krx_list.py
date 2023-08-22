@@ -4,5 +4,4 @@ import pandas as pd
 
 
 def extract():
-    # filepath = "/data/krx_list.csv"
     return fdr.StockListing("KRX")

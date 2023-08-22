@@ -7,3 +7,7 @@ config/
 data/
 tmp/
 test/
+dags/ETL_dags/common_package/__pycache__
+dags/ETL_dags/__pycache__
+dags/ELT_dags/common_package/__pycache__
+dags/ELT_dags/__pycache__

@@ -1,7 +1,6 @@
 # nas_to_rds.py
 import boto3
 import psycopg2
-import pandas as pd
 from io import StringIO
 from dotenv import dotenv_values
 import os
@@ -106,12 +105,12 @@ def rds_stock():
         DROP TABLE IF EXISTS raw_data.{table_name};
         CREATE TABLE raw_data.{table_name}(
             Date VARCHAR(40),
-            Open VARCHAR(40),
-            High VARCHAR(40),
-            Low VARCHAR(40),
-            Close VARCHAR(40),
-            Adj_Close VARCHAR(40),
-            Volume VARCHAR(40),
+            Open FLOAT,
+            High FLOAT,
+            Low FLOAT,
+            Close FLOAT,
+            Adj_Close FLOAT,
+            Volume FLOAT,
             Symbol VARCHAR(40)
         );"""
 
