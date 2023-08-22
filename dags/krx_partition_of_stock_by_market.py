@@ -1,4 +1,4 @@
-'''
+"""
 ✨전체적인 흐름
 
 joined table raw_data.krx_stock & raw_data.krx_list -> analytics.kospi_stock, analytics.kosdaq_stock, analytics.konex_stock
@@ -15,7 +15,7 @@ postgres partition으로 분리, 의존성도 있고 메모리 자원도 아낌,
 2. task decorator(@task) 사용. task 간 의존성과 순서를 정할때, 좀더 파이썬스러운 방식으로 짤 수 있어 선택했습니다.
 3. query 문으로 작업
 
-'''
+"""
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -34,17 +34,24 @@ import logging
 
 task_logger = logging.getLogger("airflow.task")
 
+
 @task
 def create_table():
     task_logger.info("delete table previous tables")
-    engine.execute(text("""
+    engine.execute(
+        text(
+            """
                 DROP TABLE IF EXISTS analytics.kospi_stock;
                 DROP TABLE IF EXISTS analytics.kosdaq_stock;
                 DROP TABLE IF EXISTS analytics.konex_stock;
                 DROP TABLE IF EXISTS analytics.krx_partition_of_stock_by_market;
-                       """))
+                       """
+        )
+    )
     task_logger.info("create table analytics.krx_partition_of_stock_by_market")
-    engine.execute(text("""
+    engine.execute(
+        text(
+            """
                 CREATE TABLE analytics.krx_partition_of_stock_by_market(
                        date TIMESTAMP,
                        open INTEGER,
@@ -58,37 +65,55 @@ def create_table():
                        marcap BIGINT,
                        CONSTRAINT PK_krx_partition_of_stock_by_market PRIMARY KEY(date, code, market)
                 ) PARTITION BY LIST(market);
-                       """))
+                       """
+        )
+    )
     return True
+
 
 @task
 def create_partitioned_tables(_):
     task_logger.info("create_partitioned_analytics.kospi_stock_table")
-    engine.execute(text("""
+    engine.execute(
+        text(
+            """
                 CREATE TABLE analytics.kospi_stock
                        PARTITION OF analytics.krx_partition_of_stock_by_market
                        FOR VALUES IN ('KOSPI');
-                       """))
-    
+                       """
+        )
+    )
+
     task_logger.info("create_partitioned_analytics.kosdaq_stock")
-    engine.execute(text("""
+    engine.execute(
+        text(
+            """
                 CREATE TABLE analytics.kosdaq_stock
                        PARTITION OF analytics.krx_partition_of_stock_by_market
                        FOR VALUES IN ('KOSDAQ', 'KOSDAQ GLOBAL');
-                       """))
-    
+                       """
+        )
+    )
+
     task_logger.info("create_partitioned_analytics.konex_stock")
-    engine.execute(text("""
+    engine.execute(
+        text(
+            """
                 CREATE TABLE analytics.konex_stock
                        PARTITION OF analytics.krx_partition_of_stock_by_market
                        FOR VALUES IN ('KONEX');
-                       """))
+                       """
+        )
+    )
     return True
+
 
 @task
 def insert_into_table(_):
     task_logger.info("insert into table from joined table krx_stock and krx_list")
-    engine.execute(text("""
+    engine.execute(
+        text(
+            """
                 WITH joined_table_krx_stock_list 
                         AS (SELECT krx_stock.*, krx_list.name, krx_list.market, krx_list.marcap
                                 FROM raw_data.krx_stock AS krx_stock
@@ -96,27 +121,32 @@ def insert_into_table(_):
                                 ON krx_stock.code = krx_list.code)
                     INSERT INTO analytics.krx_partition_of_stock_by_market
                         SELECT * FROM joined_table_krx_stock_list;
-                        """))
+                        """
+        )
+    )
     return True
 
+
 with DAG(
-    dag_id="krx_partition_of_stock_by_market6", 
-    schedule = '0 0 * * *', # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
-    start_date = days_ago(1) # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
+    dag_id="krx_partition_of_stock_by_market6",
+    schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
+    start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
 ) as dag:
     CONFIG = dotenv_values(".env")
     if not CONFIG:
         CONFIG = os.environ
 
-    # connect RDS 
+    # connect RDS
     connection_uri = "postgresql://{}:{}@{}:{}/{}".format(
         CONFIG["POSTGRES_USER"],
         CONFIG["POSTGRES_PASSWORD"],
         CONFIG["POSTGRES_HOST"],
         CONFIG["POSTGRES_PORT"],
-        CONFIG["POSTGRES_DB"]
-    ) 
-    engine = create_engine(connection_uri, pool_pre_ping=True, isolation_level='AUTOCOMMIT')
+        CONFIG["POSTGRES_DB"],
+    )
+    engine = create_engine(
+        connection_uri, pool_pre_ping=True, isolation_level="AUTOCOMMIT"
+    )
     conn = engine.connect()
 
     insert_into_table(create_partitioned_tables(create_table()))

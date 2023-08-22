@@ -7,6 +7,7 @@ import os
 krx_list_filepath = "/data/krx_list.csv"
 krx_stock_filepath = "/data/krx_stock.csv"
 
+
 def to_krx_stock_csv(code):
     print(f"Worker process id for {code}:{os.getpid()}")
     try:
@@ -15,6 +16,7 @@ def to_krx_stock_csv(code):
         df.to_csv(krx_stock_filepath, mode="a", index=True, header=False)
     except Exception as error:
         print(error)
+
 
 if __name__ == "__main__":
     krx_list = pd.read_csv(krx_list_filepath)

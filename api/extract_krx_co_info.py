@@ -2,7 +2,7 @@
 import FinanceDataReader as fdr
 import pandas as pd
 
+
 def extract():
     # filepath = "/data/krx_list.csv"
-    return fdr.StockListing('KRX-DESC')
-    
+    return fdr.StockListing("KRX-DESC")
