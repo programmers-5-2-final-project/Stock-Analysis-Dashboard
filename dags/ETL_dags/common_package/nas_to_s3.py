@@ -15,16 +15,40 @@ def load():
         aws_access_key_id=CONFIG["AWS_ACCESS_KEY_ID"],
         aws_secret_access_key=CONFIG["AWS_SECRET_ACCESS_KEY"],
     )
-
-    # for i in ['nas_list', 'nas_stock']:
-    # 파일이 이미 존재하는지 확인
-    # response = s3.list_objects(Bucket="de-5-2", Prefix=i)
-    # file_exists = len(response.get('Contents', [])) > 0
-
     # 파일 업로드
-    # if file_exists:
-    #     s3.delete_object(Bucket="de-5-2", Key=i)
     with open(nas_list_filepath, "rb") as f:
-        s3.Bucket("de-5-2").put_object(Key=f"nas_list.csv", Body=f)
+        s3.Bucket("de-5-2").put_object(Key="nas_list.csv", Body=f)
     with open(nas_stock_filepath, "rb") as f:
-        s3.Bucket("de-5-2").put_object(Key=f"nas_stock.csv", Body=f)
+        s3.Bucket("de-5-2").put_object(Key="nas_stock.csv", Body=f)
+
+
+# load()
+
+
+def delete(name):
+    CONFIG = dotenv_values(".env")
+    if not CONFIG:
+        CONFIG = os.environ
+
+    s3 = boto3.client(  # s3 연결 객체
+        "s3",
+        aws_access_key_id=CONFIG["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=CONFIG["AWS_SECRET_ACCESS_KEY"],
+    )
+
+    bucket_name = "de-5-2"
+    file_key = name
+
+    # 파일 존재 여부 확인
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=file_key)
+
+    # response의 Contents 리스트에 객체 정보가 들어있다면 해당 파일이 존재함
+    if "Contents" in response:
+        print(f"File '{file_key}' exists in bucket '{bucket_name}'.")
+        s3.delete_object(Bucket="de-5-2", Key="nas_list.csv")
+        print("delete success")
+    else:
+        print(f"File '{file_key}' does not exist in bucket '{bucket_name}'.")
+
+
+# delete("nas_list.csv")

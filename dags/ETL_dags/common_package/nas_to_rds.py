@@ -104,7 +104,7 @@ def rds_stock():
     create_table_query = f"""
         DROP TABLE IF EXISTS raw_data.{table_name};
         CREATE TABLE raw_data.{table_name}(
-            Date VARCHAR(40),
+            Date Date,
             Open FLOAT,
             High FLOAT,
             Low FLOAT,
@@ -128,3 +128,7 @@ def rds_stock():
     # 데이터베이스 연결 종료
     cur.close()
     connection.close()
+
+
+rds_list()
+rds_stock()

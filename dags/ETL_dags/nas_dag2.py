@@ -5,10 +5,11 @@ from airflow.decorators import task, dag
 from airflow.utils.dates import days_ago
 from sqlalchemy import create_engine
 from dotenv import dotenv_values
-import os
-import sys
 import logging
-from ETL_dags.common_package import nas_to_rds
+from ETL_dags.common_package import nas_list, nas_stock, nas_to_s3, nas_to_rds
+
+# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+# from api import nas_list  # nas_list api 모듈
 
 task_logger = logging.getLogger(
     "airflow.task"
@@ -19,20 +20,13 @@ task_logger = logging.getLogger(
 @task
 def extract_nas_list():
     task_logger.info("Extract_nas_list")
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import nas_list  # nas_list api 모듈
-
-    df = nas_list.extract()
-    df.to_csv("./data/nas_list.csv", index=False, encoding="utf-8-sig")
+    nas_list.extract()
     return
 
 
 # 모든 주식데이터 추출 테스크
 @task
 def extract_nas_stock():
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import nas_stock  # nas_stock api 모듈
-
     nas_stock.extract(task_logger)
     return
 
@@ -41,9 +35,6 @@ def extract_nas_stock():
 @task
 def load_nas_stock_to_s3():
     task_logger.info("Load nas_stock_to_s3_from_csv")
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import nas_to_s3  # nas_to_s3 api 모듈
-
     nas_to_s3.load()
     return
 
@@ -52,9 +43,6 @@ def load_nas_stock_to_s3():
 @task
 def load_nas_stock_to_rds_from_s3():
     task_logger.info("Load nas_stock_to_rds_from_s3")
-    # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    # from api import nas_to_rds  # nas_to_rds api 모듈
-
     nas_to_rds.rds_list()
     nas_to_rds.rds_stock()
     return
@@ -66,5 +54,9 @@ with DAG(
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
     catchup=False,  # 과거의 task를 실행할지 여부. False로 설정하면, 과거의 task는 실행되지 않습니다.
 ) as dag:
-    load_nas_stock_to_rds_from_s3()
-    # extract_nas_list() >> extract_nas_stock() >> load_nas_stock_to_s3() >> load_nas_stock_to_rds_from_s3() # dag의 task를 순서대로 연결해줍니다. >> 를 사용하시면 됩니다.
+    (
+        extract_nas_list()
+        >> extract_nas_stock()
+        >> load_nas_stock_to_s3()
+        >> load_nas_stock_to_rds_from_s3()
+    )  # dag의 task를 순서대로 연결해줍니다. >> 를 사용하시면 됩니다.

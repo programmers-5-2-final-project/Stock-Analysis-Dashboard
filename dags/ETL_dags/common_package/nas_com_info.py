@@ -6,6 +6,7 @@ import time
 import boto3
 import logging
 import psycopg2
+import FinanceDataReader as fdr
 from io import StringIO
 from dotenv import dotenv_values
 
@@ -96,9 +97,10 @@ def extract():
         "CDNS",
         "SNPS",
     ]
+    # symbols = fdr.StockListing("NASDAQ")
     nas_com_info_filepath = "./data/nas_com_info.csv"
     all_dataframes = []
-    for i in range(5):
+    for i in range(len(symbols)):
         if i != 0:
             if i % 5 == 0:
                 time.sleep(60)
@@ -232,3 +234,9 @@ def rds():
     # 데이터베이스 연결 종료
     cur.close()
     connection.close()
+
+
+extract()
+# transform()
+# load()
+# rds()
