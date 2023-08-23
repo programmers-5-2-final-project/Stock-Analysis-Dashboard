@@ -24,38 +24,31 @@ doc_md = """
 """
 
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
 import boto3
 import os
 import sys
 import pandas as pd
-from datetime import datetime, timedelta
 from sqlalchemy import create_engine, text
-import FinanceDataReader as fdr
 from dotenv import dotenv_values
 import logging
 
+from dags.ETL_dags.common_package.extract import Extract
 
 task_logger = logging.getLogger("airflow.task")
 
 
-def delete_s3bucket_objects(s3, symbol):
-    response = s3.delete_object(Bucket="de-5-2", Key="krx_list.csv")
-    if response["DeleteMarker"]:
-        task_logger.info(f"Succeed delete krx_list.csv ")
-    else:
-        task_logger.info(f"Failed delete krx_list.csv ")
-
-
 @task
 def extract_krx_list():
+    """
+    input: None | output: KRX 상장회사(발행회사)목록을 tmp/krx_list.csv에 저장해서 전달
+    """
     task_logger.info("Extract_krx_list")
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from dags.ETL_dags.common_package import krx_list  # krx_list api 모듈
-
-    raw_df = krx_list.extract()
+    extract_krx = Extract("KRX")
+    raw_df = (
+        extract_krx.values_of_listed_companies()
+    )  # input: None | output: KRX 상장회사(발행회사)목록 (가격 중심, 주식 종목), pd.DataFrame(columns=["Code","ISU_CD","Name","Market","Dept","Close","ChangeCode","Changes","ChangesRatio","Open","High","Low","Volume","Amount","Marcap","Stocks","MarketId"])
     new_columns = [
         "Code",
         "ISU_CD",
@@ -85,11 +78,12 @@ def extract_krx_list():
 
 @task
 def transform_krx_list(_):
+    """
+    input: ./tmp/krx_list.csv | output: [Code, Name] 컬럼이 NaN 값이면 행을 삭제한 KRX 상장회사(발행회사)목록을 data/krx_list.csv에 저장해서 전달
+    """
     task_logger.info("Transform krx_list")
     raw_df = pd.read_csv("./tmp/krx_list.csv")
-    transformed_df = raw_df.dropna(
-        subset=["Code", "Name"]
-    )  # Code나 Name에 Nan값이 있는 행은 제거
+    transformed_df = raw_df.dropna(subset=["Code", "Name"])
     new_columns = [
         "Code",
         "ISU_CD",
@@ -119,6 +113,9 @@ def transform_krx_list(_):
 
 @task
 def load_krx_list_to_s3(_):
+    """
+    input: ./data/krx_list.csv | output: s3에 krx_list.csv 오브젝트로 저장
+    """
     task_logger.info("Load_krx_list_to_s3")
     s3 = boto3.resource(
         "s3",
@@ -133,9 +130,10 @@ def load_krx_list_to_s3(_):
 
 @task
 def load_krx_list_to_rds_from_s3(_):
+    """
+    input: s3오브젝트인 krx_list.csv | output: rds에 raw_data.krx_list table
+    """
     task_logger.info("Load krx_list_to_rds_from_s3")
-    # task_logger.info("Installing the aws_s3 extension")
-    # engine.execute("CREATE EXTENSION aws_s3 CASCADE;") # RDS에 aws_s3 extension 추가. 처음에만 추가하면 돼서 주석처리
     task_logger.info("Creating the table raw_data.krx_list")
     engine.execute(
         text(
@@ -174,11 +172,9 @@ def load_krx_list_to_rds_from_s3(_):
                 aws_commons.create_aws_credentials('{CONFIG["AWS_ACCESS_KEY_ID"]}', '{CONFIG["AWS_SECRET_ACCESS_KEY"]}', '')    
             );"""
         )
-    )  # S3에서 RDS로 복사하는 쿼리. 자세한 정보는 https://docs.aws.amazon.com/ko_kr/AmazonRDS/latest/UserGuide/USER_PostgreSQL.S3Import.html#aws_s3.table_import_from_s3
+    )
     task_logger.info("Converting column types")
-    engine.execute(
-        text("DELETE FROM raw_data.krx_list WHERE code like '%Code%';")
-    )  # 첫 행이 header여서 지워주는 쿼리
+    engine.execute(text("DELETE FROM raw_data.krx_list WHERE code like '%Code%';"))
     engine.execute(
         text(
             """
@@ -203,14 +199,13 @@ def load_krx_list_to_rds_from_s3(_):
 with DAG(
     dag_id="krx_list_dag13",
     doc_md=doc_md,
-    schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
-    start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
+    schedule="0 0 * * *",
+    start_date=days_ago(1),
 ) as dag:
     CONFIG = dotenv_values(".env")
     if not CONFIG:
         CONFIG = os.environ
 
-    # connect RDS
     connection_uri = "postgresql://{}:{}@{}:{}/{}".format(
         CONFIG["POSTGRES_USER"],
         CONFIG["POSTGRES_PASSWORD"],
@@ -227,6 +222,5 @@ with DAG(
         load_krx_list_to_s3(transform_krx_list(extract_krx_list()))
     )
 
-    # close RDS
     conn.close()
     engine.dispose()

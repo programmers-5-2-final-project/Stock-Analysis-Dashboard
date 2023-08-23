@@ -39,14 +39,6 @@ import logging
 task_logger = logging.getLogger("airflow.task")
 
 
-def delete_s3bucket_objects(s3, symbol):
-    response = s3.delete_object(Bucket="de-5-2", Key="krx_co_info.csv")
-    if response["DeleteMarker"]:
-        task_logger.info(f"Succeed delete krx_co_info.csv ")
-    else:
-        task_logger.info(f"Failed delete krx_co_info.csv ")
-
-
 @task
 def extract_krx_co_info():
     task_logger.info("Extract_krx_co_info")

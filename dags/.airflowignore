@@ -1,2 +1,9 @@
-ETL_dags/common_package/.*
-ELT_dags/common_package/.*
+ETL_dags/common/.*
+ETL_dags/krx/.*
+ETL_dags/nasdaq/.*
+ETL_dags/sp500/.*
+
+ELT_dags/common/.*
+ELT_dags/krx/.*
+ELT_dags/nasdaq/.*
+ELT_dags/sp500/.*

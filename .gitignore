@@ -7,7 +7,15 @@ config/
 data/
 tmp/
 test/
-dags/ETL_dags/common_package/__pycache__
+
 dags/ETL_dags/__pycache__
-dags/ELT_dags/common_package/__pycache__
+dags/ETL_dags/common/__pycache__
+dags/ETL_dags/krx/__pycache__
+dags/ETL_dags/nasdaq/__pycache__
+dags/ETL_dags/sp500/__pycache__
+
 dags/ELT_dags/__pycache__
+dags/ELT_dags/common/__pycache__
+dags/ELT_dags/krx/__pycache__
+dags/ELT_dags/nasdaq/__pycache__
+dags/ELT_dags/sp500/__pycache__
