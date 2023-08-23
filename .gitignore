@@ -11,6 +11,9 @@ test/
 dags/ETL_dags/__pycache__
 dags/ETL_dags/common/__pycache__
 dags/ETL_dags/krx/__pycache__
+dags/ETL_dags/krx/krx_list/__pycache__
+dags/ETL_dags/krx/krx_stock/__pycache__
+dags/ETL_dags/krx/krx_co_info/__pycache__
 dags/ETL_dags/nasdaq/__pycache__
 dags/ETL_dags/sp500/__pycache__
 

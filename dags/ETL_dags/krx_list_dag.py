@@ -26,23 +26,14 @@ doc_md = """
 from airflow import DAG
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
-import boto3
-import os
-import sys
-import pandas as pd
-from sqlalchemy import create_engine, text
-from dotenv import dotenv_values
 import logging
 
-from ETL_dags.krx.extract_data import extract_krx_list_data, extracted_data_to_csv
-from ETL_dags.krx.transform_data import (
-    extracted_data_from_csv,
-    transform_krx_list_data,
-    transformed_data_to_csv,
+from ETL_dags.krx.krx_list.extract_data import extract_krx_list_data
+from ETL_dags.krx.krx_list.transform_data import transform_krx_list_data
+from ETL_dags.krx.krx_list.load_data_to_s3 import load_krx_list_data_to_s3
+from ETL_dags.krx.krx_list.load_data_to_rds_from_s3 import (
+    load_krx_list_data_to_rds_from_s3,
 )
-from ETL_dags.krx.load_data_to_s3 import load_krx_list_data_to_s3
-from ETL_dags.krx.load_data_to_rds_from_s3 import load_krx_list_data_to_rds_from_s3
-from ETL_dags.krx.constants import FilePath
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -54,8 +45,8 @@ def extract_krx_list():
     """
     task_logger.info("Extract_krx_list")
 
-    raw_df = extract_krx_list_data()
-    extracted_data_to_csv(raw_df)
+    extract_krx_list_data(task_logger)
+
     return True
 
 
@@ -65,9 +56,9 @@ def transform_krx_list(_):
     input: ./tmp/krx_list.csv | output: [Code, Name] 컬럼이 NaN 값이면 행을 삭제한 KRX 상장회사(발행회사)목록을 data/krx_list.csv에 저장해서 전달
     """
     task_logger.info("Transform krx_list")
-    raw_df = extracted_data_from_csv()
-    transformed_df = transform_krx_list_data(raw_df)
-    transformed_data_to_csv(transformed_df)
+
+    transformed_df = transform_krx_list_data(task_logger)
+
     return True
 
 
@@ -78,7 +69,8 @@ def load_krx_list_to_s3(_):
     """
     task_logger.info("Load_krx_list_to_s3")
 
-    load_krx_list_data_to_s3()
+    load_krx_list_data_to_s3(task_logger)
+
     return True
 
 
@@ -91,17 +83,11 @@ def load_krx_list_to_rds_from_s3(_):
 
     load_krx_list_data_to_rds_from_s3(task_logger)
 
-    task_logger.info(
-        "Importing krx_list.csv data from Amazon S3 to RDS for PostgreSQL DB instance"
-    )
-
-    task_logger.info("Converting column types")
-
     return True
 
 
 with DAG(
-    dag_id="krx_list_dag18",
+    dag_id="krx_list_dag21",
     doc_md=doc_md,
     schedule="0 0 * * *",
     start_date=days_ago(1),
