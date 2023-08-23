@@ -4,7 +4,7 @@ from ETL_dags.krx.constants import FilePath
 import pandas as pd
 
 
-def extracted_data_from_csv(df: pd.DataFrame):
+def extracted_data_from_csv():
     return csv_to_df(FilePath.tmp_krx_list_csv.value)
 
 

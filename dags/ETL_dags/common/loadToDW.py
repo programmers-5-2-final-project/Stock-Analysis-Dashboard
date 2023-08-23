@@ -24,7 +24,7 @@ class LoadToDW:
 
     def create_table(self, schema, table, column_type, primary_key):
         query = f"CREATE TABLE {schema}.{table}("
-        for column, type in column_type.item():
+        for column, type in column_type.items():
             query += f"{column} {type},"
 
         query += f"CONSTRAINT PK_{table} PRIMARY KEY({primary_key}));"
@@ -93,7 +93,7 @@ class LoadToDW:
 
     def alter_column_type(self, schema, table, column_type):
         query = f"ALTER TABLE {schema}.{table} "
-        for column, type in column_type.item():
+        for column, type in column_type.items():
             query += f"ALTER COLUMN {column} TYPE {type} USING {column}::{type},"
         query = query[:-1] + ";"
         self.engine.execute(text(query))

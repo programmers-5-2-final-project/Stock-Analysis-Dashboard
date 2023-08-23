@@ -1,7 +1,7 @@
 import boto3
-from dags.ETL_dags.krx.constants import AWS, FilePath
-from dags.ETL_dags.common.loadToDL import LoadToDL
-from dags.ETL_dags.common.csv import csv_to_rb
+from ETL_dags.krx.constants import AWS, FilePath
+from ETL_dags.common.loadToDL import LoadToDL
+from ETL_dags.common.csv import csv_to_rb
 
 
 def load_krx_list_data_to_s3():
