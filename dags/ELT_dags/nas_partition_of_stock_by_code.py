@@ -1,16 +1,16 @@
-# nas_partition_of_stock_by_code.py
+# nas_partition_of_stock_by_symbol.py
 doc_md = """
-### nas_partition_of_stock_by_code dag
+### nas_partition_of_stock_by_symbol dag
 
 #### 전체적인 흐름
 
-raw_data.nas_stock -> analytics.nas_stock_{code}
+raw_data.nas_stock -> analytics.nas_stock_{symbol}
 postgres partition으로 분리, 의존성도 있고 메모리 자원도 아낌, 즉 데이터를 효율적으로 관리.
 
-1. raw_data.nas_stock에서 code list 추출
-2. raw_data.nas_stock.* 로 세팅된 analytics.nas_partition_of_stock_by_code 테이블을 생성
-3. 생성한 테이블의 code key의 code_list로 파티션 analytics.nas_stock_{code} 테이블 모두 생성
-4. raw_data.nas_stock  테이블을 analytics.nas_partition_of_stock_by_code 에 insert
+1. raw_data.nas_stock에서 symbol list 추출
+2. raw_data.nas_stock.* 로 세팅된 analytics.nas_partition_of_stock_by_symbol 테이블을 생성
+3. 생성한 테이블의 symbol key의 symbol_list로 파티션 analytics.nas_stock_{symbol} 테이블 모두 생성
+4. raw_data.nas_stock  테이블을 analytics.nas_partition_of_stock_by_symbol 에 insert
 
 
 
@@ -54,7 +54,6 @@ def extract_symbol_list():
 @task
 def create_table(symbol_list):
     for symbol in symbol_list:
-        task_logger.info(f"delete table previous analytics.nas_stock_{symbol}")
         engine.execute(
             text(
                 f"""
@@ -71,12 +70,12 @@ def create_table(symbol_list):
         )
     )
 
-    task_logger.info("create table analytics.nas_partition_of_stock_by_symbol")
+    print("create table analytics.nas_partition_of_stock_by_symbol")
     engine.execute(
         text(
             """
                 CREATE TABLE analytics.nas_partition_of_stock_by_symbol(
-                        Date VARCHAR(40),
+                        Date Date,
                         Open FLOAT,
                         High FLOAT,
                         Low FLOAT,
@@ -86,7 +85,7 @@ def create_table(symbol_list):
                         Symbol VARCHAR(40),
                         CONSTRAINT PK_nas_partition_of_stock_by_symbol PRIMARY KEY(date, symbol)
                 ) PARTITION BY LIST(symbol);
-                       """
+            """
         )
     )
     return symbol_list
@@ -95,7 +94,7 @@ def create_table(symbol_list):
 @task
 def create_partitioned_tables(symbol_list):
     for symbol in symbol_list:
-        task_logger.info(f"create partitioned analytics.nas_stock_{symbol}")
+        print(f"create partitioned analytics.nas_stock_{symbol}")
         engine.execute(
             text(
                 f"""
@@ -111,7 +110,7 @@ def create_partitioned_tables(symbol_list):
 
 @task
 def insert_into_table(_):
-    task_logger.info("insert into table from raw_data.nas_stock")
+    print("insert into table from raw_data.nas_stock")
     engine.execute(
         text(
             """
@@ -124,7 +123,7 @@ def insert_into_table(_):
 
 
 with DAG(
-    dag_id="nas_partition_of_stock_by_symbol6",
+    dag_id="nas_partition_of_stock_by_code1",
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
