@@ -115,9 +115,36 @@ def transform():
     raw_df = pd.read_csv(nas_com_info_filepath)  # 저장된 데이터를 다시 DataFrame으로 불러옴
     transformed_df = raw_df
     transformed_df = transformed_df.drop(transformed_df.columns[3], axis=1)
+    transformed_df = transformed_df.dropna(subset=[transformed_df.columns[0]])
     transformed_df.to_csv(
         "./data/nas_com_info_t.csv", index=False
     )  # 다음 테스크로 데이터를 이동시키기 위해 csv 파일로 저장.
+
+
+def delete(filename):
+    CONFIG = dotenv_values(".env")
+    if not CONFIG:
+        CONFIG = os.environ
+
+    s3 = boto3.client(  # s3 연결 객체
+        "s3",
+        aws_access_key_id=CONFIG["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=CONFIG["AWS_SECRET_ACCESS_KEY"],
+    )
+
+    bucket_name = "de-5-2"
+    file_key = filename
+
+    # 파일 존재 여부 확인
+    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=file_key)
+
+    # response의 Contents 리스트에 객체 정보가 들어있다면 해당 파일이 존재함
+    if "Contents" in response:
+        print(f"File '{file_key}' exists in bucket '{bucket_name}'.")
+        s3.delete_object(Bucket="de-5-2", Key="nas_list.csv")
+        print("delete success")
+    else:
+        print(f"File '{file_key}' does not exist in bucket '{bucket_name}'.")
 
 
 def load():
@@ -130,7 +157,7 @@ def load():
         aws_access_key_id=CONFIG["AWS_ACCESS_KEY_ID"],
         aws_secret_access_key=CONFIG["AWS_SECRET_ACCESS_KEY"],
     )
-
+    delete("nas_com_info.csv")
     with open(nas_com_info_filepath, "rb") as f:
         s3.Bucket("de-5-2").put_object(Key=f"nas_com_info.csv", Body=f)
 
@@ -236,7 +263,7 @@ def rds():
     connection.close()
 
 
-extract()
+# extract()
 # transform()
 # load()
 # rds()
