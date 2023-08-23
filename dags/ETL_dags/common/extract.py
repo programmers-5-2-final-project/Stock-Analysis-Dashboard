@@ -6,7 +6,8 @@ from enum import Enum
 
 class Extract:
     """
-    Extract task에서 사용하는 클래스
+    Extract task에서 사용하는 클래스,
+    일단 krx를 위주로 구성
     """
 
     def __init__(self, market: str):
