@@ -4,27 +4,6 @@ from dotenv import dotenv_values
 import os
 
 
-def load():
-    CONFIG = dotenv_values(".env")
-    if not CONFIG:
-        CONFIG = os.environ
-    nas_list_filepath = "./data/nas_list.csv"
-    nas_stock_filepath = "./data/nas_stock.csv"
-    s3 = boto3.resource(  # s3 연결 객체
-        "s3",
-        aws_access_key_id=CONFIG["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=CONFIG["AWS_SECRET_ACCESS_KEY"],
-    )
-    # 파일 업로드
-    with open(nas_list_filepath, "rb") as f:
-        s3.Bucket("de-5-2").put_object(Key="nas_list.csv", Body=f)
-    with open(nas_stock_filepath, "rb") as f:
-        s3.Bucket("de-5-2").put_object(Key="nas_stock.csv", Body=f)
-
-
-# load()
-
-
 def delete(name):
     CONFIG = dotenv_values(".env")
     if not CONFIG:
@@ -49,6 +28,29 @@ def delete(name):
         print("delete success")
     else:
         print(f"File '{file_key}' does not exist in bucket '{bucket_name}'.")
+
+
+def load():
+    CONFIG = dotenv_values(".env")
+    if not CONFIG:
+        CONFIG = os.environ
+    nas_list_filepath = "./data/nas_list.csv"
+    nas_stock_filepath = "./data/nas_stock.csv"
+    s3 = boto3.resource(  # s3 연결 객체
+        "s3",
+        aws_access_key_id=CONFIG["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=CONFIG["AWS_SECRET_ACCESS_KEY"],
+    )
+    # 파일 업로드
+    delete("nas_list.csv")
+    delete("nas_stock.csv")
+    with open(nas_list_filepath, "rb") as f:
+        s3.Bucket("de-5-2").put_object(Key="nas_list.csv", Body=f)
+    with open(nas_stock_filepath, "rb") as f:
+        s3.Bucket("de-5-2").put_object(Key="nas_stock.csv", Body=f)
+
+
+# load()
 
 
 # delete("nas_list.csv")
