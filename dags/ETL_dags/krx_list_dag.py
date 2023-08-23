@@ -101,7 +101,7 @@ def load_krx_list_to_rds_from_s3(_):
 
 
 with DAG(
-    dag_id="krx_list_dag17",
+    dag_id="krx_list_dag18",
     doc_md=doc_md,
     schedule="0 0 * * *",
     start_date=days_ago(1),

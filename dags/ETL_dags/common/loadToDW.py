@@ -56,6 +56,9 @@ class LoadToDW:
         #     )
         # )
 
+    def install_aws_s3_extension(self):
+        self.engine.execute(text("CREATE EXTENSION aws_s3 CASCADE;"))
+
     def table_import_from_s3(
         self,
         schema,

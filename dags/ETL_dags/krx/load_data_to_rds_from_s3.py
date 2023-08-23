@@ -48,6 +48,9 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
     primary_key = "Code"
     load_krx_to_rds_from_s3.create_table(schema, table, tmp_column_type, primary_key)
 
+    task_logger.info("Installing the aws_s3 extension")
+    load_krx_to_rds_from_s3.install_aws_s3_extension()  # RDS에 aws_s3 extension 추가. 처음에만 추가하면 돼서 주석처리
+
     task_logger.info("Importing from s3")
     load_krx_to_rds_from_s3.table_import_from_s3(
         schema,
