@@ -77,7 +77,7 @@ def create_table():
                         representative VARCHAR(300),
                         homepage VARCHAR(300),
                         region VARCHAR(40),
-                        CONSTRAINT PK_krx_partition_of_list_by_market PRIMARY KEY(code, market)
+                        PRIMARY KEY(code, market)
                 ) PARTITION BY LIST(market);
                        """
         )
@@ -149,7 +149,7 @@ def insert_into_table(_):
 
 
 with DAG(
-    dag_id="krx_partition_of_list_by_market4",
+    dag_id="krx_partition_of_list_by_market5",
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
