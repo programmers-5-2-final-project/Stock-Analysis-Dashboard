@@ -50,3 +50,12 @@ def extract_krx_stock_data(code):
         )
     except Exception as e:
         print(e)
+
+
+def extract_all_krx_stock_data(krx_list):
+    new_columns = ["Date", "Open", "High", "Low", "Close", "Volume", "Change", "Code"]
+    df = pd.DataFrame(columns=new_columns)
+    df.to_csv(FilePath.tmp_krx_stock_csv.value, index=False)
+    cpu_count = mp.cpu_count() - 2
+    with mp.Pool(cpu_count) as pool:
+        pool.map(extract_krx_stock_data, krx_list)

@@ -21,29 +21,18 @@ doc_md = """
 """
 
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
-import boto3
-import os
-import sys
-import pandas as pd
-from datetime import datetime, timedelta
-from sqlalchemy import create_engine, text
-import FinanceDataReader as fdr
-from dotenv import dotenv_values
 import logging
-import billiard as mp
 from ETL_dags.krx.krx_stock.extract_data import (
     extract_krx_list_data_from_rds,
-    extract_krx_stock_data,
+    extract_all_krx_stock_data,
 )
 from ETL_dags.krx.krx_stock.transform_data import transform_krx_stock_data
 from ETL_dags.krx.krx_stock.load_data_to_s3 import load_krx_stock_data_to_s3
 from ETL_dags.krx.krx_stock.load_data_to_rds_from_s3 import (
     load_krx_stock_data_to_rds_from_s3,
 )
-from ETL_dags.krx.constants import FilePath
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -59,12 +48,7 @@ def extract_krx_list():
 @task
 def extract_krx_stock(krx_list):
     task_logger.info("Extract krx stock")
-    new_columns = ["Date", "Open", "High", "Low", "Close", "Volume", "Change", "Code"]
-    df = pd.DataFrame(columns=new_columns)
-    df.to_csv(FilePath.tmp_krx_stock_csv.value, index=False)
-    cpu_count = mp.cpu_count() - 2
-    with mp.Pool(cpu_count) as pool:
-        pool.map(extract_krx_stock_data, krx_list)
+    extract_all_krx_stock_data(krx_list)
 
     return True
 
@@ -94,7 +78,7 @@ def load_krx_stock_to_rds_from_s3(_):
 
 
 with DAG(
-    dag_id="krx_stock_dag28",
+    dag_id="krx_stock_dag29",
     doc_md=doc_md,
     schedule="0 0 * * *",
     start_date=days_ago(1),
