@@ -4,7 +4,7 @@ from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
 
 
-def load_krx_list_data_to_rds_from_s3(task_logger):
+def load_krx_stock_data_to_rds_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
         RDS.rds_user.value,
@@ -24,32 +24,22 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
     load_krx_to_rds_from_s3 = LoadToDW(db.engine)
 
     schema = "raw_data"
-    table = "krx_list"
+    table = "krx_stock"
 
-    task_logger.info("Dropping existing raw_data.krx_list")
+    task_logger.info("Dropping existing raw_data.krx_stock")
     load_krx_to_rds_from_s3.drop_table(schema, table)
 
-    task_logger.info("Creating the table raw_data.krx_list")
+    task_logger.info("Creating the table raw_data.krx_stock")
     tmp_column_type = {
-        "Code": "VARCHAR(40)",
-        "ISU_CD": "VARCHAR(40)",
-        "Name": "VARCHAR(40)",
-        "Market": "VARCHAR(40)",
-        "Dept": "VARCHAR(40)",
-        "Close": "VARCHAR(40)",
-        "ChangeCode": "VARCHAR(40)",
-        "Changes": "VARCHAR(40)",
-        "ChangesRatio": "VARCHAR(40)",
+        "Date": "VARCHAR(40)",
         "Open": "VARCHAR(40)",
         "High": "VARCHAR(40)",
         "Low": "VARCHAR(40)",
+        "Close": "VARCHAR(40)",
         "Volume": "VARCHAR(40)",
-        "Amount": "VARCHAR(40)",
-        "Marcap": "VARCHAR(40)",
-        "Stocks": "VARCHAR(40)",
-        "MarketId": "VARCHAR(40)",
+        "Code": "VARCHAR(40)",
     }
-    primary_key = "Code"
+    primary_key = "Date, Code"
     load_krx_to_rds_from_s3.create_table(schema, table, tmp_column_type, primary_key)
 
     try:
@@ -63,7 +53,7 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
         schema,
         table,
         AWS.s3_bucket.value,
-        "krx_list.csv",
+        "krx_stock.csv",
         AWS.region.value,
         AWS.aws_access_key_id.value,
         AWS.aws_secret_access_key.value,
@@ -74,23 +64,13 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
 
     task_logger.info("Altering columns type")
     real_column_type = {
-        "Code": "VARCHAR(40)",
-        "ISU_CD": "VARCHAR(40)",
-        "Name": "VARCHAR(40)",
-        "Market": "VARCHAR(40)",
-        "Dept": "VARCHAR(40)",
-        "Close": "INTEGER",
-        "ChangeCode": "INTEGER",
-        "Changes": "INTEGER",
-        "ChangesRatio": "FLOAT",
+        "Date": "TIMESTAMP",
         "Open": "INTEGER",
         "High": "INTEGER",
         "Low": "INTEGER",
+        "Close": "INTEGER",
         "Volume": "INTEGER",
-        "Amount": "BIGINT",
-        "Marcap": "BIGINT",
-        "Stocks": "BIGINT",
-        "MarketId": "VARCHAR(40)",
+        "Code": "VARCHAR(40)",
     }
     load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
 

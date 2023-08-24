@@ -1,11 +1,12 @@
 from ETL_dags.common.loadToDW import LoadToDW
+from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
 
 
 def load_krx_co_info_data_to_rds_from_s3(task_logger):
-    task_logger.info("Creating LoadToDW instance")
-    load_krx_to_rds_from_s3 = LoadToDW(
+    task_logger.info("Creating DB instance")
+    db = DB(
         RDS.rds_user.value,
         RDS.rds_password.value,
         RDS.rds_host.value,
@@ -14,10 +15,13 @@ def load_krx_co_info_data_to_rds_from_s3(task_logger):
     )
 
     task_logger.info("Creating sqlalchemy engine")
-    load_krx_to_rds_from_s3.create_sqlalchemy_engine()
+    db.create_sqlalchemy_engine()
 
     task_logger.info("Connecting sqlalchemy engine")
-    load_krx_to_rds_from_s3.connect_engine()
+    db.connect_engine()
+
+    task_logger.info("Creating LoadToDW instance")
+    load_krx_to_rds_from_s3 = LoadToDW(db.engine)
 
     schema = "raw_data"
     table = "krx_co_info"
@@ -77,7 +81,7 @@ def load_krx_co_info_data_to_rds_from_s3(task_logger):
     load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
 
     task_logger.info("Closing connection")
-    load_krx_to_rds_from_s3.close_connection()
+    db.close_connection()
 
     task_logger.info("Disposing sqlalchemy engine")
-    load_krx_to_rds_from_s3.dispose_sqlalchemy_engine()
+    db.dispose_sqlalchemy_engine()
