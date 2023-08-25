@@ -15,6 +15,8 @@ dags/ETL_dags/krx/krx_list/__pycache__
 dags/ETL_dags/krx/krx_stock/__pycache__
 dags/ETL_dags/krx/krx_co_info/__pycache__
 dags/ETL_dags/nasdaq/__pycache__
+dags/ETL_dags/nasdaq/nas/__pycache__
+dags/ETL_dags/nasdaq/nas_co_info/__pycache__
 dags/ETL_dags/sp500/__pycache__
 
 dags/ELT_dags/__pycache__

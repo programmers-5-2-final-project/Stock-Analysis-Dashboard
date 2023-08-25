@@ -10,9 +10,8 @@ if not CONFIG:
 class FilePath(Enum):
     data_nas_list_csv = "./data/nas_list.csv"
     data_nas_stock_csv = "./data/nas_stock.csv"
-
-    tmp_krx_co_info_csv = "./tmp/krx_co_info.csv"
-    data_krx_co_info_csv = "./data/krx_co_info.csv"
+    data_nas_co_info_csv = "./data/nas_co_info.csv"
+    data_nas_co_info_t_csv = "./data/nas_com_info_t.csv"
 
 
 class AWS(Enum):
