@@ -17,6 +17,7 @@ class Extract:
         """
         상장된 기업들의 시가총액, 주식거래량, 전날 주식값을 추출
         """
+        print(fdr.__file__)
         return fdr.StockListing(self.market)
 
     def info_of_listed_companies(self) -> pd.DataFrame:
