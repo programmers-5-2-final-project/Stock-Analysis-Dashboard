@@ -3,6 +3,7 @@ import FinanceDataReader as fdr
 import pandas as pd
 import random
 import requests
+import quandl
 
 
 class Extract:
@@ -52,6 +53,21 @@ class Extract:
         기업에 대한 주식 데이터를 추출
         """
         return fdr.DataReader(code, start_date, end_date)
+
+    def price(self, start_date, end_date):
+        if self.market == "gold":
+            ticker = "LBMA/GOLD"
+        elif self.market == "silver":
+            ticker = "LBMA/SILVER"
+        elif self.market == "cme":
+            ticker = "CHRIS/CME_HG10"
+        elif self.market == "orb":
+            ticker = "OPEC/ORB"
+
+        from ETL_dags.raw_material.constants import API_KEY
+
+        quandl.ApiConfig.api_key = API_KEY.QUANDL_KEY.value
+        return quandl.get(ticker, trim_start=start_date, trim_end=end_date)
 
 
 class FetchDataError(Exception):

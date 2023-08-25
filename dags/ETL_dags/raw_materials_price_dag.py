@@ -13,217 +13,46 @@ import pandas as pd
 from sqlalchemy import create_engine
 import quandl  # 금, 은 가격
 from datetime import datetime, timedelta
-
-today = datetime.today().strftime("%Y-%m-%d")
+from ETL_dags.raw_material.extract_data import extract_raw_material_price_data
+from ETL_dags.raw_material.load_data_to_s3 import load_raw_material_price_data_to_s3
+from ETL_dags.raw_material.load_data_to_rds_from_s3 import (
+    load_raw_material_price_data_to_rds_from_s3,
+)
 
 task_logger = logging.getLogger("airflow.task")
 
 
 @task
-def start():
-    task_logger.info("Start task")
-    return 1
+def set_start_end_date():
+    task_logger.info("Setting start_date and end_date")
+    dt = datetime.now()
+    end_date = dt.strftime("%Y-%m-%d")
+    dt = dt.replace(year=dt.year - 20)
+    start_date = dt.strftime("%Y-%m-%d")
+    return [start_date, end_date]
 
 
 @task
-def extract_raw_material_price(_, raw_material):
-    """
-    금, 은, 구리, 원유 가격 가져오기
-    type :
-        금 : LBMA/GOLD
-        은 : LBMA/SILVER
-        구리 : CHRIS/CME_HG10
-        원유 : OPEC/ORB
-
-    {'금' : 'gold',
-    '은' : 'silver',
-    '구리' : 'cme',
-    '원유' : 'orb'}
-    """
-    task_logger.info("extract raw material prices")
-
-    ticker = {
-        "gold": "LBMA/GOLD",
-        "silver": "LBMA/SILVER",
-        "cme": "CHRIS/CME_HG10",
-        "orb": "OPEC/ORB",
-    }
-
-    today = datetime.now().strftime("%Y-%m-%d")
-    file_name = f"{raw_material}_price_{today}"
-
-    # .env 파일 로드
-    import os
-    from dotenv import load_dotenv
-
-    load_dotenv()
-
-    # 환경 변수에서 액세스 키와 시크릿 키 가져오기
-    QUANDL_KEY = os.getenv("QUANDL_KEY")
-
-    quandl.ApiConfig.api_key = QUANDL_KEY
-    df_raw_material_price = quandl.get(
-        ticker[raw_material], trim_start="2010-01-01", trim_end=today
-    )
-    task_logger.info(df_raw_material_price.iloc[0])
-    # 데이터프레임을 CSV 파일로 저장
-    csv_filepath = f"/opt/airflow/data/{file_name}.csv"
-    df_raw_material_price.to_csv(csv_filepath, encoding="cp949")
-
-    return [file_name, raw_material]
-
-
-@task
-def load_raw_material_price_to_s3(values):
-    task_logger.info("load_raw_material_price_to_s3")
-    """
-    s3에 적재하는 함수
-    """
-    from dotenv import load_dotenv
-    import os
-    from datetime import datetime
-
-    today = datetime.today().strftime("%Y-%m-%d")
-
-    # .env 파일 로드
-    load_dotenv()
-
-    # 환경 변수에서 액세스 키와 시크릿 키 가져오기
-    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-
-    file_name, raw_material = values[0], values[1]
-    # aws 추가 설정
-    S3_BUCKET = "de-5-2"
-    S3_FILE = file_name
-    LOCAL_FILEPATH = f"/opt/airflow/data/{file_name}.csv"
-
-    # 로컬 CSV 파일을 S3에 업로드
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    )
-    with open(LOCAL_FILEPATH, "rb") as f:
-        s3.upload_fileobj(f, S3_BUCKET, f"{S3_FILE}.csv")
-        task_logger.info(f"Success_load_s3_{file_name}.csv")
+def extract_raw_material_price(date, raw_material):
+    task_logger.info("Extract raw material price")
+    start_date, end_date = date[0], date[1]
+    extract_raw_material_price_data(task_logger, raw_material, start_date, end_date)
 
     return raw_material
 
 
-### 3. s3 -> RDS
+@task
+def load_raw_material_price_to_s3(raw_material):
+    task_logger.info(f"load_{raw_material}_price_to_s3")
+    load_raw_material_price_data_to_s3(task_logger, raw_material)
+
+    return raw_material
 
 
 @task
 def load_raw_material_price_to_rds_from_s3(raw_material):
-    from io import StringIO
-    from sqlalchemy import create_engine
-    from dotenv import load_dotenv
-    import boto3
-    import psycopg2
-
-    task_logger.info("load_raw_material_price_to_rds_from_s3")
-    # .env 파일 로드
-    load_dotenv()
-    today = datetime.today().strftime("%Y-%m-%d")
-
-    # 환경 변수에서 액세스 키와 시크릿 키 가져오기
-    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-
-    # S3에서 데이터 로드
-    # AWS 설정
-    S3_BUCKET = "de-5-2"
-
-    file_name = f"{raw_material}_price_{today}"
-    S3_FILE = f"{file_name}.csv"
-
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    )
-
-    response = s3.get_object(Bucket=S3_BUCKET, Key=S3_FILE)
-    body = response["Body"].read().decode("utf-8")
-    task_logger.info(body)
-
-    # StringIO 객체로 변환 (메모리 상에서의 파일 객체처럼 동작)
-    f = StringIO(body)
-    next(f)  # 헤더 행 건너뛰기
-
-    host = os.getenv("POSTGRES_HOST")
-    port = os.getenv("POSTGRES_PORT")
-    dbname = os.getenv("POSTGRES_DB")
-    user = os.getenv("POSTGRES_USER")
-    password = os.getenv("POSTGRES_PASSWORD")
-
-    conn = psycopg2.connect(
-        dbname=dbname, user=user, password=password, host=host, port=port
-    )
-
-    cur = conn.cursor()
-
-    raw_material_sql = {
-        "gold": [
-            f"""DROP TABLE IF EXISTS raw_data.gold;
-    CREATE TABLE raw_data.gold (
-        date date, 
-        USD_AM float, 
-        USD_PM float, 
-        GBP_AM float, 
-        GBP_PM float, 
-        EURO_AM float, 
-        EURO_PM float
-    );""",
-            "raw_data.gold",
-        ],
-        "silver": [
-            f"""DROP TABLE IF EXISTS raw_data.silver;
-    CREATE TABLE raw_data.silver (
-        date date, 
-        USD float, 
-        GBP float, 
-        EURO float
-    );""",
-            "raw_data.silver",
-        ],
-        "cme": [
-            f"""DROP TABLE IF EXISTS raw_data.cme;
-    CREATE TABLE raw_data.cme (
-        date date, 
-        open float,
-        high float, 
-        low float,
-        last float,
-        change float,
-        settle float,
-        volume float,
-        Previous_Day_Open_Interest float
-    );""",
-            "raw_data.cme",
-        ],
-        "orb": [
-            f"""DROP TABLE IF EXISTS raw_data.orb;
-    CREATE TABLE raw_data.orb (
-        date date, 
-        value float
-    );""",
-            "raw_data.orb ",
-        ],
-    }
-    cur.execute(raw_material_sql[raw_material][0])
-
-    copy_sql = f"""
-        COPY {raw_material_sql[raw_material][1]} FROM stdin WITH CSV DELIMITER ','
-    """
-
-    cur.copy_expert(sql=copy_sql, file=f)
-    conn.commit()
-    task_logger.info(f"{raw_material_sql[raw_material][0]}_to_rds_Success")
-
-    cur.close()
-    conn.close()
+    task_logger.info(f"load_{raw_material}_price_to_rds_from_s3")
+    load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material)
 
     return True
 
@@ -244,23 +73,24 @@ default_args = {
 
 
 with DAG(
-    dag_id="raw_materials_dag1",
+    dag_id="raw_materials_dag17",
     schedule="0 0 * * *",
     start_date=days_ago(1),
-    default_args=default_args,
+    # default_args=default_args,
 ) as dag:
-    start = start()
+    date = set_start_end_date()
 
     raw_materials = ["gold", "silver", "cme", "orb"]
-
     etl = []
     for raw_material in raw_materials:
-        result = s3_to_rds.override(task_id=f"s3_to_rds_{raw_material}")(
-            to_s3.override(task_id=f"to_s3_{raw_material}")(
-                get_precious_raw_material_prices.override(
-                    task_id=f"get_precious_raw_material_prices_{raw_material}"
-                )(start, raw_material)
-            )
-        )
+        # _raw_material = extract_raw_material_price.override(
+        #     task_id=f"extract_{raw_material}_price"
+        # )(date, raw_material)
+        # _raw_material = load_raw_material_price_to_s3.override(
+        #     task_id=f"load_{raw_material}_price_to_s3"
+        # )(_raw_material)
+        result = load_raw_material_price_to_rds_from_s3.override(
+            task_id=f"load_{raw_material}_price_to_rds_from_s3"
+        )(raw_material)
         etl.append(result)
     end(etl)

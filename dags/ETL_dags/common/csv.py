@@ -12,7 +12,9 @@ def df_to_csv(
         new_columns = df.columns.values.tolist()
         init_df = pd.DataFrame(columns=new_columns)
         init_df.to_csv(file_path, mode="w", index=index, encoding="utf-8-sig")
-    df.to_csv(file_path, mode="a", index=index, header=header, encoding="utf-8-sig")
+        df.to_csv(file_path, mode="a", index=index, header=header, encoding="utf-8-sig")
+    else:
+        df.to_csv(file_path, mode="w", index=index, header=header, encoding="utf-8-sig")
 
 
 def csv_to_df(file_path: str) -> pd.DataFrame:

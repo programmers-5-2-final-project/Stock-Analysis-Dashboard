@@ -19,32 +19,6 @@ class LoadToDW:
             query = query[:-1] + ");"
         self.engine.execute(text(query))
 
-        # self.engine.execute(
-        #     text(
-        #         f"""
-        #             CREATE TABLE {schema}.{table}(
-        #             {columns[0]} VARCHAR(40),
-        #             ISU_CD VARCHAR(40),
-        #             Name VARCHAR(40),
-        #             Market VARCHAR(40),
-        #             Dept VARCHAR(40),
-        #             Close VARCHAR(40),
-        #             ChangeCode VARCHAR(40),
-        #             Changes VARCHAR(40),
-        #             ChangesRatio VARCHAR(40),
-        #             Open VARCHAR(40),
-        #             High VARCHAR(40),
-        #             Low VARCHAR(40),
-        #             Volume VARCHAR(40),
-        #             Amount VARCHAR(40),
-        #             Marcap VARCHAR(40),
-        #             Stocks VARCHAR(40),
-        #             MarketId VARCHAR(40),
-        #             CONSTRAINT PK_{table} PRIMARY KEY({primary_key})
-        #         );"""
-        #     )
-        # )
-
     def install_aws_s3_extension(self):
         self.engine.execute(text("CREATE EXTENSION aws_s3 CASCADE;"))
 
@@ -67,44 +41,17 @@ class LoadToDW:
         """
         self.engine.execute(text(query))
 
-    #         engine.execute(
-    #     text(
-    #         f"""
-    #         SELECT aws_s3.table_import_from_s3(
-    #         'raw_data.krx_list', '', '(format csv)',
-    #         aws_commons.create_s3_uri('de-5-2', 'krx_list.csv', 'ap-northeast-2'),
-    #         aws_commons.create_aws_credentials('{CONFIG["AWS_ACCESS_KEY_ID"]}', '{CONFIG["AWS_SECRET_ACCESS_KEY"]}', '')
-    #     );"""
-    #     )
-    # )
-
     def delete_wrong_row(self, schema, table, clause):
         query = f"DELETE FROM {schema}.{table} WHERE {clause};"
         self.engine.execute(text(query))
-        # engine.execute(text("DELETE FROM raw_data.krx_list WHERE code like '%Code%';"))
 
     def alter_column_type(self, schema, table, column_type):
         query = f"ALTER TABLE {schema}.{table} "
         for column, type in column_type.items():
-            query += f"ALTER COLUMN {column} TYPE {type} USING {column}::{type},"
+            if type in ["DATE", "TIMESTAMP"]:
+                print("#########################")
+                query += f"ALTER COLUMN {column} TYPE {type} USING to_date({column}, 'YYYY-MM-DD'),"
+            else:
+                query += f"ALTER COLUMN {column} TYPE {type} USING {column}::{type},"
         query = query[:-1] + ";"
         self.engine.execute(text(query))
-        # engine.execute(
-
-    #     text(
-    #         """
-    #             ALTER TABLE raw_data.krx_list
-    #                 ALTER COLUMN Close TYPE INTEGER USING Close::INTEGER,
-    #                 ALTER COLUMN ChangeCode TYPE INTEGER USING ChangeCode::INTEGER,
-    #                 ALTER COLUMN Changes TYPE INTEGER USING Changes::INTEGER,
-    #                 ALTER COLUMN ChangesRatio TYPE FLOAT USING ChangesRatio::FLOAT,
-    #                 ALTER COLUMN Open TYPE INTEGER USING Open::INTEGER,
-    #                 ALTER COLUMN High TYPE INTEGER USING High::INTEGER,
-    #                 ALTER COLUMN Low TYPE INTEGER USING Low::INTEGER,
-    #                 ALTER COLUMN Volume TYPE INTEGER USING Volume::INTEGER,
-    #                 ALTER COLUMN Amount TYPE BIGINT USING Amount::BIGINT,
-    #                 ALTER COLUMN Marcap TYPE BIGINT USING Marcap::BIGINT,
-    #                 ALTER COLUMN Stocks TYPE BIGINT USING Stocks::BIGINT;
-    #             """
-    #     )
-    # )

@@ -8,14 +8,10 @@ if not CONFIG:
 
 
 class FilePath(Enum):
-    tmp_krx_list_csv = "./tmp/krx_list.csv"
-    data_krx_list_csv = "./data/krx_list.csv"
-
-    tmp_krx_co_info_csv = "./tmp/krx_co_info.csv"
-    data_krx_co_info_csv = "./data/krx_co_info.csv"
-
-    tmp_krx_stock_csv = "./tmp/krx_stock.csv"
-    data_krx_stock_csv = "./data/krx_stock.csv"
+    data_gold_price_csv = "./data/gold_price.csv"
+    data_silver_price_csv = "./data/silver_price.csv"
+    data_cme_price_csv = "./data/cme_price.csv"
+    data_orb_price_csv = "./data/orb_price.csv"
 
 
 class AWS(Enum):
@@ -31,3 +27,14 @@ class RDS(Enum):
     rds_host = CONFIG["POSTGRES_HOST"]
     rds_port = CONFIG["POSTGRES_PORT"]
     rds_dbname = CONFIG["POSTGRES_DB"]
+
+
+class Ticker(Enum):
+    gold = "LBMA/GOLD"
+    silver = "LBMA/SILVER"
+    cme = "CHRIS/CME_HG10"
+    orb = "OPEC/ORB"
+
+
+class API_KEY(Enum):
+    QUANDL_KEY = CONFIG["QUANDL_KEY"]
