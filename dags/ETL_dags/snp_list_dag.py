@@ -23,22 +23,15 @@ doc_md = """
 
 """
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
-import boto3
-import os
-import sys
-import pandas as pd
-from datetime import datetime, timedelta
-from sqlalchemy import create_engine
-import FinanceDataReader as fdr
-from dotenv import dotenv_values
 import logging
-from concurrent.futures import ThreadPoolExecutor
-import psycopg2
-from io import StringIO
-from typing import List, Dict
+from ETL_dags.snp500.snp_list.extract_data import extract_snp_list_data
+from ETL_dags.snp500.snp_list.transform_data import transform_snp_list_data
+from ETL_dags.snp500.snp_list.load_data_to_s3 import load_snp_list_data_to_s3
+from ETL_dags.snp500.snp_list.load_data_to_rds_from_s3 import (
+    load_snp_list_data_to_rds_from_s3,
+)
 
 task_logger = logging.getLogger("airflow.task")  # airflow log에 남기기 위한 사전작업.
 
@@ -50,11 +43,7 @@ def extract_snp_stock_list() -> bool:
     output: SNP500 심볼 목록을 ./tmp/snp_stock_list.csv 파일로 저장
     """
     task_logger.info("Extract_snp_stock_list")
-
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_list
-
-    snp_list.extract()
+    extract_snp_list_data(task_logger)
 
     return True
 
@@ -68,11 +57,7 @@ def transform_snp_stock_list(
     output: 전처리된 snp500 데이터를 ./data/snp_list.csv 파일로 저장하여 전달
     """
     task_logger.info(f"Transform snp_stock_list")
-
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_list
-
-    snp_list.transform()
+    transform_snp_list_data(task_logger)
 
     return True
 
@@ -87,11 +72,9 @@ def load_snp_stock_list_to_s3(
 
     """
     task_logger.info(f"Load_snp_stock_list_to_s3")
+    load_snp_list_data_to_s3(task_logger)
 
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_list
-
-    snp_list.load()
+    return True
 
 
 @task
@@ -102,12 +85,7 @@ def load_snp_stock_list_to_rds_from_s3(_load_snp_stock_to_s3: bool) -> bool:
     """
 
     task_logger.info(f"Load_snp_stock_list_to_rds_from_s3")
-
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_list
-
-    # Download data from S3
-    snp_list.s3_to_rds()
+    load_snp_list_data_to_rds_from_s3(task_logger)
 
     return True
 

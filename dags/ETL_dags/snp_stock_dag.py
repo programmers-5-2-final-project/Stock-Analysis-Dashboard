@@ -41,6 +41,8 @@ from concurrent.futures import ThreadPoolExecutor
 import psycopg2
 from io import StringIO
 from typing import List, Dict
+from ETL_dags.snp500.snp_stock.extract_data import extract_snp_stock_data
+
 
 task_logger = logging.getLogger("airflow.task")  # airflow log에 남기기 위한 사전작업.
 
@@ -71,11 +73,7 @@ def extract_snp_stock() -> bool:  # 기업 단위로 주식데이터 추출 테�
     output: snp500의 모든 데이터를 ./tmp/snp_stock.csv 파일로 저장하여 전달
     """
     task_logger.info("Extract_snp_stock")
-    task_logger.info(f"Local Path: {sys.path}")
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_stock  # snp_fetch 모듈
-
-    snp_stock.extract()
+    extract_snp_stock_data()
 
     return True
 
