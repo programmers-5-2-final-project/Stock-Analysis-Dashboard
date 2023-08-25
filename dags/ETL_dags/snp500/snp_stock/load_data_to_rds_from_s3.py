@@ -4,7 +4,7 @@ from ETL_dags.snp500.constants import RDS, AWS
 import sqlalchemy
 
 
-def load_snp_list_data_to_rds_from_s3(task_logger):
+def load_snp_stock_data_to_rds_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
         RDS.rds_user.value,
@@ -24,19 +24,24 @@ def load_snp_list_data_to_rds_from_s3(task_logger):
     load_snp500_to_rds_from_s3 = LoadToDW(db.engine)
 
     schema = "raw_data"
-    table = "snp_stock_list"
+    table = "snp_stock"
 
-    task_logger.info("Dropping existing raw_data.snp_stock_list")
+    task_logger.info("Dropping existing raw_data.snp_stock")
     load_snp500_to_rds_from_s3.drop_table(schema, table)
 
-    task_logger.info("Creating the table raw_data.snp_stock_list")
+    task_logger.info("Creating the table raw_data.snp_stock")
     tmp_column_type = {
+        "Date": "VARCHAR(40)",
+        "Open": "VARCHAR(40)",
+        "High": "VARCHAR(40)",
+        "Low": "VARCHAR(40)",
+        "Close": "VARCHAR(40)",
+        "Volume": "VARCHAR(40)",
         "Symbol": "VARCHAR(40)",
-        "Name": "VARCHAR(100)",
-        "Sector": "VARCHAR(40)",
-        "Industry": "VARCHAR(100)",
+        "Change": "VARCHAR(40)",
     }
-    primary_key = "Symbol"
+
+    primary_key = "Date, Symbol"
     load_snp500_to_rds_from_s3.create_table(schema, table, tmp_column_type, primary_key)
 
     try:
@@ -50,14 +55,24 @@ def load_snp_list_data_to_rds_from_s3(task_logger):
         schema,
         table,
         AWS.s3_bucket.value,
-        "snp_stock_list.csv",
+        "snp_stock.csv",
         AWS.region.value,
         AWS.aws_access_key_id.value,
         AWS.aws_secret_access_key.value,
     )
 
-    task_logger.info("Deleting wrong row")
-    load_snp500_to_rds_from_s3.delete_wrong_row(schema, table, "code like '%Code%'")
+    task_logger.info("Altering columns type")
+    real_column_type = {
+        "Date": "TIMESTAMP",
+        "Open": "FLOAT",
+        "High": "FLOAT",
+        "Low": "FLOAT",
+        "Close": "FLOAT",
+        "Volume": "FLOAT",
+        "Symbol": "VARCHAR(40)",
+        "Change": "FLOAT",
+    }
+    load_snp500_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
 
     task_logger.info("Closing connection")
     db.close_connection()

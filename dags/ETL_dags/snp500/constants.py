@@ -10,6 +10,7 @@ if not CONFIG:
 class FilePath(Enum):
     tmp_snp_list_csv = "./tmp/snp_stock_list.csv"
     data_snp_list_csv = "./data/snp_stock_list.csv"
+    tmp_snp_stock_csv = "./tmp/snp_stock.csv"
     data_snp_stock_csv = "./data/snp_stock.csv"
 
 

@@ -25,23 +25,15 @@ doc_md = """
 
 """
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 from airflow.utils.dates import days_ago
-import boto3
-import os
-import sys
-import pandas as pd
-from datetime import datetime, timedelta
-from sqlalchemy import create_engine
-import FinanceDataReader as fdr
-from dotenv import dotenv_values
 import logging
-from concurrent.futures import ThreadPoolExecutor
-import psycopg2
-from io import StringIO
-from typing import List, Dict
 from ETL_dags.snp500.snp_stock.extract_data import extract_snp_stock_data
+from ETL_dags.snp500.snp_stock.transform_data import transform_snp_stock_data
+from ETL_dags.snp500.snp_stock.load_data_to_s3 import load_snp_stock_data_to_s3
+from ETL_dags.snp500.snp_stock.load_data_to_rds_from_s3 import (
+    load_snp_stock_data_to_rds_from_s3,
+)
 
 
 task_logger = logging.getLogger("airflow.task")  # airflow log에 남기기 위한 사전작업.
@@ -85,11 +77,7 @@ def transform_snp_stock(_extract_snp_stock: bool) -> bool:  # 기업 단위로 �
     output: 전처리된 snp500 데이터를 ./data/snp_stock.csv 파일로 저장하여 전달
     """
     task_logger.info(f"Transform snp_stock")
-
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_stock
-
-    snp_stock.transform()  # 모듈에서의 함수를 사용합니다.
+    transform_snp_stock_data(task_logger)
 
     return True
 
@@ -104,11 +92,9 @@ def load_snp_stock_to_s3(
 
     """
     task_logger.info(f"Load_snp_stock_to_s3")
+    load_snp_stock_data_to_s3(task_logger)
 
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_stock
-
-    snp_stock.load()
+    return True
 
 
 @task
@@ -119,13 +105,9 @@ def load_snp_stock_to_rds_from_s3(_load_snp_stock_to_s3: bool) -> bool:
     """
 
     task_logger.info(f"Load_snp_stock_to_rds_from_s3")
+    load_snp_stock_data_to_rds_from_s3(task_logger)
 
-    S3_BUCKET = "de-5-2"
-
-    sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    from api import snp_stock
-
-    snp_stock.s3_to_rds()
+    return True
 
 
 with DAG(

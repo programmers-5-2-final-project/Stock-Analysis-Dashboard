@@ -3,9 +3,9 @@ from ETL_dags.common.loadToDL import LoadToDL
 from ETL_dags.common.csv import csv_to_rb
 
 
-def load_snp_list_data_to_s3(task_logger):
-    S3_FILE = "snp_stock_list.csv"
-    LOCAL_FILE = FilePath.data_snp_list_csv.value
+def load_snp_stock_data_to_s3(task_logger):
+    S3_FILE = "snp_stock.csv"
+    LOCAL_FILE = FilePath.data_snp_stock_csv.value
     load_snp500_to_s3 = LoadToDL(
         AWS.aws_access_key_id.value,
         AWS.aws_secret_access_key.value,
