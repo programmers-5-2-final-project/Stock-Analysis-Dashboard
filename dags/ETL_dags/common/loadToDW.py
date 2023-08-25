@@ -8,12 +8,15 @@ class LoadToDW:
     def drop_table(self, schema, table):
         self.engine.execute(text(f"DROP TABLE IF EXISTS {schema}.{table};"))
 
-    def create_table(self, schema, table, column_type, primary_key):
+    def create_table(self, schema, table, column_type, primary_key=None):
         query = f"CREATE TABLE {schema}.{table}("
         for column, type in column_type.items():
             query += f"{column} {type},"
 
-        query += f"CONSTRAINT PK_{table} PRIMARY KEY({primary_key}));"
+        if primary_key:
+            query += f" PRIMARY KEY({primary_key}));"
+        else:
+            query = query[:-1] + ");"
         self.engine.execute(text(query))
 
         # self.engine.execute(

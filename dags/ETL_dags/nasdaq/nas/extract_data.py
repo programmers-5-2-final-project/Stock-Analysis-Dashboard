@@ -4,11 +4,13 @@ from ETL_dags.nasdaq.constants import FilePath
 import FinanceDataReader as fdr
 import pandas as pd
 import time
+import billiard as mp
 
 
 def extract_nas_list_data(task_logger):
     extract = Extract("NASDAQ")
     df = extract.values_of_listed_companies()
+    df.drop_duplicates(subset=["Symbol"])
     df_to_csv(
         df,
         FilePath.data_nas_list_csv.value,
@@ -28,17 +30,32 @@ def extract_nas_stock_data(task_logger=None):
     task_logger.info(nas_Symbols)
 
     # CSV 파일의 column 설정
-    new_columns = ["Date", "Open", "High", "Low", "Close", "Adj_Close", "Volume"]
+    new_columns = [
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Adj_Close",
+        "Volume",
+        "Symbol",
+    ]
     df = pd.DataFrame(columns=new_columns)
 
     # 수정된 DataFrame을 다시 CSV 파일로 저장
     df.to_csv(nas_stock_filepath, index=False)  # index는 저장하지 않음
 
-    for i in range(0, len(nas_Symbols)):
-        if i % 1000 == 0 and i != 0:
-            time.sleep(180)
-        to_nas_stock_csv(nas_Symbols[i])
-        print(nas_Symbols[i], i)
+    nas_Symbols_split = []
+    for i in range(0, len(nas_Symbols) // 1500 + 1):
+        nas_Symbols_split.append(nas_Symbols[i * 1500 : (i + 1) * 1500])
+
+    cpu_count = mp.cpu_count() - 2
+    for n, nas_Symbols in enumerate(nas_Symbols_split):
+        task_logger.info(f"*********************nas_Symbols_{n}*********************")
+        with mp.Pool(cpu_count) as pool:
+            pool.map(to_nas_stock_csv, nas_Symbols)
+        task_logger.info(f"*********************sleeping...*************************")
+        time.sleep(120)
 
 
 def to_nas_stock_csv(symbol):

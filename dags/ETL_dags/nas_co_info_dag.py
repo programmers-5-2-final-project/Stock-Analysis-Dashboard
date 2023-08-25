@@ -4,7 +4,7 @@ from airflow.decorators import task
 from airflow.utils.dates import days_ago
 import logging
 from ETL_dags.nasdaq.nas_co_info.extract_data import extract_nas_co_info_data
-from ETL_dags.nasdaq.nas_co_info.transform_data import transform_krx_co_info_data
+from ETL_dags.nasdaq.nas_co_info.transform_data import transform_nas_co_info_data
 from ETL_dags.nasdaq.nas_co_info.load_data_to_s3 import load_nas_co_info_data_to_s3
 from ETL_dags.nasdaq.nas_co_info.load_data_to_rds_from_s3 import (
     load_nas_co_info_data_to_rds_from_s3,
@@ -26,7 +26,7 @@ def extract_nas_co_info():  # 기업 단위로 주식데이터 추출 테스크
 @task
 def transform_nas_co_info():  # 기업 단위로 추출한 주식데이터 전처리 테스크
     task_logger.info(f"Transform nas_co_info")
-    transform_krx_co_info_data(task_logger)
+    transform_nas_co_info_data(task_logger)
 
     return
 

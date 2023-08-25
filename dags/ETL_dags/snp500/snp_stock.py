@@ -15,7 +15,7 @@ from typing import List, Dict
 CONFIG = dotenv_values(".env")
 if not CONFIG:
     CONFIG = os.environ
-S3_BUCKET = CONFIG["S3_BUCKET"]
+S3_BUCKET = "de-5-2"
 AWS_ACCESS_KEY = CONFIG["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_KEY = CONFIG["AWS_SECRET_ACCESS_KEY"]
 S3_FILE = "snp_stock.csv"

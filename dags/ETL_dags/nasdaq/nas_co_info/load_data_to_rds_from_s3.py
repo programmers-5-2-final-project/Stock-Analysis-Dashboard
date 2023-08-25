@@ -24,7 +24,7 @@ def load_nas_co_info_data_to_rds_from_s3(task_logger):
     load_nas_to_rds_from_s3 = LoadToDW(db.engine)
 
     schema = "raw_data"
-    table = "nas_com_info"
+    table = "nas_co_info"
 
     task_logger.info("Dropping existing raw_data.nas_co_info")
     load_nas_to_rds_from_s3.drop_table(schema, table)

@@ -36,8 +36,8 @@ def load_nas_list_data_to_rds_from_s3(task_logger):
         "Industry": "VARCHAR(100)",
         "IndustryCode": "VARCHAR(40)",
     }
-    primary_key = "Symbol"
-    load_nas_list.create_table(schema, table, tmp_column_type, primary_key)
+    # primary_key = "Symbol"
+    load_nas_list.create_table(schema, table, tmp_column_type)
 
     try:
         task_logger.info("Installing the aws_s3 extension")
@@ -85,10 +85,10 @@ def load_nas_stock_data_to_rds_from_s3(task_logger):
     schema = "raw_data"
     table = "nas_stock"
 
-    task_logger.info("Dropping existing raw_data.nas_list")
+    task_logger.info("Dropping existing raw_data.nas_stock")
     load_nas_stock.drop_table(schema, table)
 
-    task_logger.info("Creating the table raw_data.nas_list")
+    task_logger.info("Creating the table raw_data.nas_stock")
     tmp_column_type = {
         "Date": "VARCHAR(40)",
         "Open": "VARCHAR(40)",
@@ -119,6 +119,9 @@ def load_nas_stock_data_to_rds_from_s3(task_logger):
         AWS.aws_access_key_id.value,
         AWS.aws_secret_access_key.value,
     )
+
+    task_logger.info("Deleting wrong row")
+    load_nas_stock.delete_wrong_row(schema, table, "symbol like '%Symbol%'")
 
     task_logger.info("Altering columns type")
     real_column_type = {
