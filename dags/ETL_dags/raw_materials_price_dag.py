@@ -1,47 +1,22 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.decorators import task
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-from airflow.operators.python_operator import BranchPythonOperator
 from airflow.utils.dates import days_ago
 
 import boto3
 import os
 import logging
 import sys
-from dotenv import load_dotenv  # env 파일 사용
+from dotenv import load_dotenv
 from datetime import datetime
-
-# from concurrent.futures import ThreadPoolExecutor
-# from botocore.exceptions import NoCredentialsError
-# from tempfile import TemporaryDirectory
-
 import pandas as pd
-from sqlalchemy import create_engine  # 포스트그레스 연결
-
-# import FinanceDataReader as fdr # 주식 데이터
+from sqlalchemy import create_engine
 import quandl  # 금, 은 가격
-
-# import pendulum
-
-### 오늘 날짜 생성 -> 추후 next_execution_date 사용할 예정
 from datetime import datetime, timedelta
 
 today = datetime.today().strftime("%Y-%m-%d")
 
-task_logger = logging.getLogger("airflow.task")  # airflow log에 남기기 위한 사전작업.
-
-# Start 태스크
-start_task = DummyOperator(task_id="start")
-
-
-def decide_branch(**kwargs):
-    return ["gold", "silver", "cme", "orb"]
-
-
-### 1. 데이터 가져오기
-### 금, 은 가격 가져오기
+task_logger = logging.getLogger("airflow.task")
 
 
 @task
@@ -51,21 +26,21 @@ def start():
 
 
 @task
-def get_precious_metal_prices(start, metal_type):
-    task_logger.info("get_precious_metal_prices")
-    """ 
+def extract_raw_material_price(_, raw_material):
+    """
     금, 은, 구리, 원유 가격 가져오기
-    type : 
+    type :
         금 : LBMA/GOLD
         은 : LBMA/SILVER
         구리 : CHRIS/CME_HG10
         원유 : OPEC/ORB
-        
+
     {'금' : 'gold',
     '은' : 'silver',
     '구리' : 'cme',
     '원유' : 'orb'}
     """
+    task_logger.info("extract raw material prices")
 
     ticker = {
         "gold": "LBMA/GOLD",
@@ -75,7 +50,7 @@ def get_precious_metal_prices(start, metal_type):
     }
 
     today = datetime.now().strftime("%Y-%m-%d")
-    file_name = f"{metal_type}_price_{today}"
+    file_name = f"{raw_material}_price_{today}"
 
     # .env 파일 로드
     import os
@@ -87,20 +62,20 @@ def get_precious_metal_prices(start, metal_type):
     QUANDL_KEY = os.getenv("QUANDL_KEY")
 
     quandl.ApiConfig.api_key = QUANDL_KEY
-    df_metal_price = quandl.get(
-        ticker[metal_type], trim_start="2010-01-01", trim_end=today
+    df_raw_material_price = quandl.get(
+        ticker[raw_material], trim_start="2010-01-01", trim_end=today
     )
-    task_logger.info(df_metal_price.iloc[0])
+    task_logger.info(df_raw_material_price.iloc[0])
     # 데이터프레임을 CSV 파일로 저장
     csv_filepath = f"/opt/airflow/data/{file_name}.csv"
-    df_metal_price.to_csv(csv_filepath, encoding="cp949")
+    df_raw_material_price.to_csv(csv_filepath, encoding="cp949")
 
-    return [file_name, metal_type]
+    return [file_name, raw_material]
 
 
 @task
-def to_s3(values):
-    task_logger.info("to_s3 task start!!!")
+def load_raw_material_price_to_s3(values):
+    task_logger.info("load_raw_material_price_to_s3")
     """
     s3에 적재하는 함수
     """
@@ -117,7 +92,7 @@ def to_s3(values):
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
-    file_name, metal_type = values[0], values[1]
+    file_name, raw_material = values[0], values[1]
     # aws 추가 설정
     S3_BUCKET = "de-5-2"
     S3_FILE = file_name
@@ -133,21 +108,21 @@ def to_s3(values):
         s3.upload_fileobj(f, S3_BUCKET, f"{S3_FILE}.csv")
         task_logger.info(f"Success_load_s3_{file_name}.csv")
 
-    return metal_type
+    return raw_material
 
 
 ### 3. s3 -> RDS
 
 
 @task
-def s3_to_rds(metal_type):
+def load_raw_material_price_to_rds_from_s3(raw_material):
     from io import StringIO
     from sqlalchemy import create_engine
     from dotenv import load_dotenv
     import boto3
     import psycopg2
 
-    task_logger.info(f"Load s3_to_rds_")
+    task_logger.info("load_raw_material_price_to_rds_from_s3")
     # .env 파일 로드
     load_dotenv()
     today = datetime.today().strftime("%Y-%m-%d")
@@ -160,7 +135,7 @@ def s3_to_rds(metal_type):
     # AWS 설정
     S3_BUCKET = "de-5-2"
 
-    file_name = f"{metal_type}_price_{today}"
+    file_name = f"{raw_material}_price_{today}"
     S3_FILE = f"{file_name}.csv"
 
     s3 = boto3.client(
@@ -177,12 +152,11 @@ def s3_to_rds(metal_type):
     f = StringIO(body)
     next(f)  # 헤더 행 건너뛰기
 
-    # RDS Postgres 데이터베이스 연결
     host = os.getenv("POSTGRES_HOST")
     port = os.getenv("POSTGRES_PORT")
     dbname = os.getenv("POSTGRES_DB")
     user = os.getenv("POSTGRES_USER")
-    password = os.getenv("POSTGRES_PASSWORD")  # 실제 비밀번호로 변경하세요
+    password = os.getenv("POSTGRES_PASSWORD")
 
     conn = psycopg2.connect(
         dbname=dbname, user=user, password=password, host=host, port=port
@@ -190,7 +164,7 @@ def s3_to_rds(metal_type):
 
     cur = conn.cursor()
 
-    metal_sql = {
+    raw_material_sql = {
         "gold": [
             f"""DROP TABLE IF EXISTS raw_data.gold;
     CREATE TABLE raw_data.gold (
@@ -238,18 +212,16 @@ def s3_to_rds(metal_type):
             "raw_data.orb ",
         ],
     }
-    cur.execute(metal_sql[metal_type][0])
+    cur.execute(raw_material_sql[raw_material][0])
 
-    # copy_expert를 사용하여 메모리에서 바로 Postgres로 데이터 업로드
     copy_sql = f"""
-        COPY {metal_sql[metal_type][1]} FROM stdin WITH CSV DELIMITER ','
+        COPY {raw_material_sql[raw_material][1]} FROM stdin WITH CSV DELIMITER ','
     """
 
     cur.copy_expert(sql=copy_sql, file=f)
     conn.commit()
-    task_logger.info(f"{metal_sql[metal_type][0]}_to_rds_Success")
+    task_logger.info(f"{raw_material_sql[raw_material][0]}_to_rds_Success")
 
-    # 데이터베이스 연결 종료
     cur.close()
     conn.close()
 
@@ -262,17 +234,6 @@ def end(_):
     return
 
 
-# def decide_branch(**kwargs):
-#     return ['gold', 'silver', 'cme', 'orb']
-
-
-# # BranchPythonOperator를 사용하여 분기 설정
-# branch_task = BranchPythonOperator(
-#     task_id="decide_branch",
-#     python_callable=decide_branch,
-# )
-
-# Airflow DAG 기본 설정 정의
 default_args = {
     "owner": "airflow",  # DAG 소유자
     "depends_on_past": False,  # 이전 작업이 성공했을 때만 실행할지 여부
@@ -283,24 +244,23 @@ default_args = {
 
 
 with DAG(
-    dag_id="test_parallel_metal_load23",  # dag 이름
-    schedule="0 0 * * *",  # UTC기준 하루단위/ 자정에 실행
-    start_date=days_ago(1),  # 시작 날짜, 시간
+    dag_id="raw_materials_dag1",
+    schedule="0 0 * * *",
+    start_date=days_ago(1),
     default_args=default_args,
 ) as dag:
     start = start()
 
-    # for문을 사용하여 병렬 태스크 그룹 생성
-    metals = ["gold", "silver", "cme", "orb"]
+    raw_materials = ["gold", "silver", "cme", "orb"]
 
-    metal_tasks = []
-    for metal in metals:
-        result = s3_to_rds.override(task_id=f"s3_to_rds_{metal}")(
-            to_s3.override(task_id=f"to_s3_{metal}")(
-                get_precious_metal_prices.override(
-                    task_id=f"get_precious_metal_prices_{metal}"
-                )(start, metal)
+    etl = []
+    for raw_material in raw_materials:
+        result = s3_to_rds.override(task_id=f"s3_to_rds_{raw_material}")(
+            to_s3.override(task_id=f"to_s3_{raw_material}")(
+                get_precious_raw_material_prices.override(
+                    task_id=f"get_precious_raw_material_prices_{raw_material}"
+                )(start, raw_material)
             )
         )
-        metal_tasks.append(result)
-    end(metal_tasks)
+        etl.append(result)
+    end(etl)
