@@ -37,8 +37,8 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
         "Low": "VARCHAR(40)",
         "Close": "VARCHAR(40)",
         "Volume": "VARCHAR(40)",
-        "Symbol": "VARCHAR(40)",
         "Change": "VARCHAR(40)",
+        "Symbol": "VARCHAR(40)",
     }
 
     primary_key = "Date, Symbol"
@@ -61,6 +61,9 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
         AWS.aws_secret_access_key.value,
     )
 
+    task_logger.info("Deleting wrong row")
+    load_snp500_to_rds_from_s3.delete_wrong_row(schema, table, "symbol like '%Symbol%'")
+
     task_logger.info("Altering columns type")
     real_column_type = {
         "Date": "TIMESTAMP",
@@ -69,8 +72,8 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
         "Low": "FLOAT",
         "Close": "FLOAT",
         "Volume": "FLOAT",
-        "Symbol": "VARCHAR(40)",
         "Change": "FLOAT",
+        "Symbol": "VARCHAR(40)",
     }
     load_snp500_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
 

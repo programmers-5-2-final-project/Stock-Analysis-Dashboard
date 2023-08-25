@@ -57,7 +57,7 @@ def load_snp_list_data_to_rds_from_s3(task_logger):
     )
 
     task_logger.info("Deleting wrong row")
-    load_snp500_to_rds_from_s3.delete_wrong_row(schema, table, "code like '%Code%'")
+    load_snp500_to_rds_from_s3.delete_wrong_row(schema, table, "symbol like '%Symbol%'")
 
     task_logger.info("Closing connection")
     db.close_connection()
