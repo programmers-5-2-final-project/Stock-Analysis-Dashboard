@@ -43,9 +43,6 @@ def create_table():
     engine.execute(
         text(
             """
-                DROP TABLE IF EXISTS analytics.kospi_stock;
-                DROP TABLE IF EXISTS analytics.kosdaq_stock;
-                DROP TABLE IF EXISTS analytics.konex_stock;
                 DROP TABLE IF EXISTS analytics.krx_partition_of_stock_by_market;
                        """
         )
@@ -130,7 +127,7 @@ def insert_into_table(_):
 
 
 with DAG(
-    dag_id="krx_partition_of_stock_by_market7",
+    dag_id="krx_partition_of_stock_by_market8",
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.

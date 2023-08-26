@@ -53,15 +53,6 @@ def extract_symbol_list():
 
 @task
 def create_table(symbol_list):
-    for symbol in symbol_list:
-        engine.execute(
-            text(
-                f"""
-                    DROP TABLE IF EXISTS analytics.nas_stock_{symbol};
-                        """
-            )
-        )
-
     engine.execute(
         text(
             """
@@ -123,7 +114,7 @@ def insert_into_table(_):
 
 
 with DAG(
-    dag_id="nas_partition_of_stock_by_code15",
+    dag_id="nas_partition_of_stock_by_code16",
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.

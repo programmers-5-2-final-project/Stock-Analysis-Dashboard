@@ -50,16 +50,6 @@ def extract_code_list():
 
 @task
 def create_table(code_list):
-    for code in code_list:
-        task_logger.info(f"drop table previous analytics.krx_stock_{code}")
-        engine.execute(
-            text(
-                f"""
-                    DROP TABLE IF EXISTS analytics.krx_stock_{code};
-                        """
-            )
-        )
-
     task_logger.info("drop table previous analytics.krx_partition_of_stock_by_code")
     engine.execute(
         text(
@@ -121,7 +111,7 @@ def insert_into_table(_):
 
 
 with DAG(
-    dag_id="krx_partition_of_stock_by_code13",
+    dag_id="krx_partition_of_stock_by_code14",
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
