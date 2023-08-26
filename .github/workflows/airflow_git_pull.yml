@@ -27,5 +27,5 @@ jobs:
         ssh -vvv -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST "\
         cd /home/ubuntu/airflow; \
         ls -tl"
-        # git pull origin main"
+        git pull origin main"
         rm -f private_key.pem
