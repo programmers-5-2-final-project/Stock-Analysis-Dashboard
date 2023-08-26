@@ -48,10 +48,6 @@ class LoadToDW:
     def alter_column_type(self, schema, table, column_type):
         query = f"ALTER TABLE {schema}.{table} "
         for column, type in column_type.items():
-            if type in ["DATE", "TIMESTAMP"]:
-                print("#########################")
-                query += f"ALTER COLUMN {column} TYPE {type} USING to_date({column}, 'YYYY-MM-DD'),"
-            else:
-                query += f"ALTER COLUMN {column} TYPE {type} USING {column}::{type},"
+            query += f"ALTER COLUMN {column} TYPE {type} USING {column}::{type},"
         query = query[:-1] + ";"
         self.engine.execute(text(query))
