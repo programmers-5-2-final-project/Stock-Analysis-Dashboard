@@ -1,4 +1,3 @@
-
 # nas_com_info.py
 import pandas as pd
 import os
@@ -10,22 +9,9 @@ import yfinance as yf
 from io import StringIO
 from dotenv import dotenv_values
 
-from concurrent.futures import ThreadPoolExecutor
-import sys
-import os
-
-
-sys.path.append(
-    os.path.dirname(
-        os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-    )
-)
-
-
 from ETL_dags.common.extract import Extract
 from ETL_dags.common.csv import df_to_csv, csv_to_df
 from ETL_dags.nasdaq.constants import FilePath
-
 
 
 CONFIG = dotenv_values(".env")
@@ -45,14 +31,12 @@ def extract():
         "shortName",
         "sector",
         "marketCap",
-        "volume",
         "previousClose",
         "regularMarketOpen",
         "change",
     ]
-    def getinfo(symbol):
     # nas_Symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
-    df_nas = fdr.StockListing("NASDAQ")
+    df_nas = fdr.StockListing("S&P500")
     nas_Symbols = list(set(df_nas["Symbol"].tolist()))
 
     company_info_list = []
@@ -65,27 +49,15 @@ def extract():
             ticker_data = nasdaq_tickers.tickers[symbol].info
             info = [ticker_data[item] for item in header[:-1]]
             info.append(round(((info[-1] - info[-2]) / info[-2]) * 100, 4))
+            company_info_list.append(info)
             print(f"Successfully fetched data for symbol {symbol}")
-            return info
         except Exception as e:
             print(f"Failed to fetch data for symbol {symbol}. Error: {str(e)}")
-            return [symbol] + [None] * (len(header) - 1)
 
-    df_nas = fdr.StockListing("NASDAQ")
-    nas_Symbols = list(set(df_nas["Symbol"].tolist()))
-    company_info_list = []
-    company_info_list.append(header)
-
-    with ThreadPoolExecutor(max_workers=6) as executor:
-        futures = [executor.submit(getinfo, symbol) for symbol in nas_Symbols]
-        for future in futures:
-            company_info_list.append(future.result())
-
-        # header에 해당하는 정보로 데이터프레임 생성
+    # header에 해당하는 정보로 데이터프레임 생성
     df = pd.DataFrame(company_info_list[1:], columns=header)
     nas_co_info_filepath = "./data/nas_co_info.csv"
     df_sorted = df.sort_values(by="marketCap", ascending=False)
-    df_sorted = df_sorted.dropna(subset=["shortName"])
     df_sorted.to_csv(nas_co_info_filepath, mode="w", index=False, header=True)
 
     print(f"Company info saved to {nas_co_info_filepath}")
@@ -137,44 +109,32 @@ def rds():
     connection = psycopg2.connect(
         host=db_host, port=db_port, dbname=db_name, user=db_user, password=db_password
     )
-    cursor = connection.cursor()
 
-    try:
-        # 새로운 데이터 테이블 생성
-        table_name = "nas_co_info"
-        create_table_query = f"""
-            DROP TABLE IF EXISTS raw_data.{table_name};
-            CREATE TABLE raw_data.{table_name} (
-                symbol VARCHAR(100),
-                name VARCHAR(100),
-                sector VARCHAR(100),
-                marcap FLOAT,
-                volume FLOAT,
-                previous_close FLOAT,
-                regular_market_open FLOAT,
-                changesratio FLOAT
-            );"""
+    # 새로운 데이터 테이블 생성
+    table_name = "nas_co_info"
+    create_table_query = f"""
+        DROP TABLE IF EXISTS raw_data.{table_name};
+        CREATE TABLE raw_data.{table_name} (
+            Symbol VARCHAR(100),
+            Name VARCHAR(100),
+            "sector" VARCHAR(100),
+            "marketCap" FLOAT,
+            "previousClose" FLOAT,
+            "regularMarketOpen" FLOAT,
+            "change" FLOAT
+        );"""
 
-        cursor.execute(create_table_query)
+    cur = connection.cursor()
+    cur.execute(create_table_query)
+    connection.commit()
 
-        # copy_expert를 사용하여 메모리에서 바로 Postgres로 데이터 업로드
-        copy_sql = """
-        COPY raw_data.nas_co_info FROM stdin WITH CSV DELIMITER ','
-        """
-        cursor.copy_expert(sql=copy_sql, file=f)
-        connection.commit()
+    # copy_expert를 사용하여 메모리에서 바로 Postgres로 데이터 업로드
+    copy_sql = """
+    COPY raw_data.nas_co_info FROM stdin WITH CSV DELIMITER ','
+    """
+    cur.copy_expert(sql=copy_sql, file=f)
+    connection.commit()
 
-    except Exception as e:
-        print(e)
-        connection.rollback()
-
-    finally:
-        # 데이터베이스 연결 종료
-        cursor.close()
-        connection.close()
-
-
-# extract()
-# load()
-# rds()
-
+    # 데이터베이스 연결 종료
+    cur.close()
+    connection.close()

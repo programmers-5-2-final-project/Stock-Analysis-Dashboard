@@ -1,10 +1,10 @@
-from ETL_dags.common.loadToDW import LoadToRDS
+from ETL_dags.common.loadToDW import LoadToRedshift
 from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
 
 
-def load_krx_list_data_to_rds_from_s3(task_logger):
+def load_krx_list_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
         RDS.rds_user.value,
@@ -20,14 +20,8 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
     task_logger.info("Connecting sqlalchemy engine")
     db.connect_engine()
 
-    task_logger.info("Creating LoadToDW instance")
-    load_krx_to_rds_from_s3 = LoadToDW(db.conn)
-
-    try:
-        task_logger.info("Installing the aws_s3 extension")
-        load_krx_to_rds_from_s3.install_aws_s3_extension()
-    except sqlalchemy.exc.ProgrammingError:
-        task_logger.info("aws_s3 extension already exists")
+    task_logger.info("Creating LoadToRedshift instance")
+    load_krx_to_rds_from_s3 = LoadToRedshift(db.engine)
 
     # 트랜잭션 시작
     trans = db.conn.begin()
@@ -64,14 +58,8 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
         )
 
         task_logger.info("Importing from s3")
-        load_krx_to_rds_from_s3.table_import_from_s3(
-            schema,
-            table,
-            AWS.s3_bucket.value,
-            "krx_list.csv",
-            AWS.region.value,
-            AWS.aws_access_key_id.value,
-            AWS.aws_secret_access_key.value,
+        load_krx_to_rds_from_s3.table_copy_from_s3(
+            schema, table, AWS.s3_bucket.value, "krx_list.csv"
         )
 
         task_logger.info("Deleting wrong row")
