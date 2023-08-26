@@ -20,8 +20,9 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
     task_logger.info("Connecting sqlalchemy engine")
     db.connect_engine()
 
-    task_logger.info("Creating LoadToRDS instance")
-    load_krx_to_rds_from_s3 = LoadToRDS(db.engine)
+    task_logger.info("Creating LoadToDW instance")
+    load_krx_to_rds_from_s3 = LoadToDW(db.conn)
+
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_krx_to_rds_from_s3.install_aws_s3_extension()

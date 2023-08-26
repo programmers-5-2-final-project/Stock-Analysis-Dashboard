@@ -21,7 +21,7 @@ def load_nas_co_info_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_nas_to_rds_from_s3 = LoadToDW(db.engine)
+    load_nas_to_rds_from_s3 = LoadToDW(db.conn)
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_nas_to_rds_from_s3.install_aws_s3_extension()
