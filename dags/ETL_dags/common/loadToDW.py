@@ -39,7 +39,8 @@ class LoadToDW:
             aws_commons.create_aws_credentials('{aws_access_key_id}', '{aws_secret_access_key}', '')
             );
         """
-        self.conn.execute(text(query))
+        result = self.conn.execute(text(query))
+        print(result.fetchall())
 
     def delete_wrong_row(self, schema, table, clause):
         query = f"DELETE FROM {schema}.{table} WHERE {clause};"

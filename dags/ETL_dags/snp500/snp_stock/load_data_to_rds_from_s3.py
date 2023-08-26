@@ -21,7 +21,7 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_snp500_to_rds_from_s3 = LoadToDW(db.engine)
+    load_snp500_to_rds_from_s3 = LoadToDW(db.conn)
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_snp500_to_rds_from_s3.install_aws_s3_extension()
