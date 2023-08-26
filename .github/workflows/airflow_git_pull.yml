@@ -24,7 +24,7 @@ jobs:
       run: |
         echo "$PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
-        ssh -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST "\
+        ssh -vvv -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST "\
         cd /home/ubuntu/airflow; \
         ls -tl"
         # git pull origin main"
