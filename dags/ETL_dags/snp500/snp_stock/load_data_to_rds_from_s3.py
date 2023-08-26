@@ -37,8 +37,8 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
         "Low": "VARCHAR(40)",
         "Close": "VARCHAR(40)",
         "Volume": "VARCHAR(40)",
-        "Change": "VARCHAR(40)",
         "Symbol": "VARCHAR(40)",
+        "Change": "VARCHAR(40)",
     }
 
     primary_key = "Date, Symbol"
