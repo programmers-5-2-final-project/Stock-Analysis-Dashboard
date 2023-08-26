@@ -7,3 +7,7 @@ sqlalchemy<2.0
 finance-datareader
 quandl
 billiard
+yfinance
+boto3
+psycopg2-binary
+python-dotenv
