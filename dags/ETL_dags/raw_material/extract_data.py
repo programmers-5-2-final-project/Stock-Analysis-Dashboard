@@ -18,4 +18,6 @@ def extract_raw_material_price_data(task_logger, raw_material, start_date, end_d
         file_path = FilePath.data_cme_price_csv.value
     if raw_material == "orb":
         file_path = FilePath.data_orb_price_csv.value
-    df_to_csv(raw_df, file_path, index=True, header=False, is_new=False)
+    df_to_csv(
+        raw_df, file_path, index=True, header=False, is_new=False, encoding="cp949"
+    )

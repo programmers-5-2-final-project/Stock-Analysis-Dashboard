@@ -73,7 +73,7 @@ default_args = {
 
 
 with DAG(
-    dag_id="raw_materials_dag19",
+    dag_id="raw_materials_dag24",
     schedule="0 0 * * *",
     start_date=days_ago(1),
     # default_args=default_args,
@@ -83,14 +83,14 @@ with DAG(
     raw_materials = ["gold", "silver", "cme", "orb"]
     etl = []
     for raw_material in raw_materials:
-        # _raw_material = extract_raw_material_price.override(
-        #     task_id=f"extract_{raw_material}_price"
-        # )(date, raw_material)
-        # _raw_material = load_raw_material_price_to_s3.override(
-        #     task_id=f"load_{raw_material}_price_to_s3"
-        # )(_raw_material)
+        _raw_material = extract_raw_material_price.override(
+            task_id=f"extract_{raw_material}_price"
+        )(date, raw_material)
+        _raw_material = load_raw_material_price_to_s3.override(
+            task_id=f"load_{raw_material}_price_to_s3"
+        )(_raw_material)
         result = load_raw_material_price_to_rds_from_s3.override(
             task_id=f"load_{raw_material}_price_to_rds_from_s3"
-        )(raw_material)
+        )(_raw_material)
         etl.append(result)
     end(etl)
