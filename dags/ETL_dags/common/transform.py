@@ -27,5 +27,5 @@ class Transform:
     def drop_duplicates(self):
         self.df.drop_duplicates()
 
-    def pct_change(self, column_Y, column_x):
-        self.df[column_Y] = self.df[column_x].pct_change()
+    def pct_change(self, column_y, column_x):
+        self.df[column_y] = self.df[column_x].pct_change()

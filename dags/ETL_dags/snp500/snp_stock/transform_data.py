@@ -19,6 +19,9 @@ def transform_snp_stock_data(task_logger):
     task_logger.info("Dropping duplicates")
     transformed_snp500.drop_duplicates()
 
+    task_logger.info("Add Change column")
+    transformed_snp500.pct_change(column_y="Change", column_x="Close")
+
     task_logger.info("Filling nan value")
     transformed_snp500.fill_nan(column="Change", value=0)
 
