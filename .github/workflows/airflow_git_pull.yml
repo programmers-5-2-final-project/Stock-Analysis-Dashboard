@@ -26,6 +26,6 @@ jobs:
         chmod 600 private_key.pem
         ssh -vvv -o StrictHostKeyChecking=no -i private_key.pem $USER@$HOST "\
         cd /home/ubuntu/Stock-Analysis-Dashboard; \
-        ls -tl"
+        ls -tl; \
         git pull origin main"
         rm -f private_key.pem
