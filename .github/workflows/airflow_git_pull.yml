@@ -1,4 +1,4 @@
-name: airflow git pull
+name: airflow git pull main
 
 on:
   push:
