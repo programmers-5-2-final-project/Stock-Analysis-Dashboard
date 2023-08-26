@@ -24,12 +24,18 @@ def extract_krx_list_data_from_rds(task_logger):
     task_logger.info("Connecting sqlalchemy engine")
     db.connect_engine()
 
-    task_logger.info("Extracting krx stock data")
-    resultproxy = db.engine.execute(text("SELECT code FROM raw_data.krx_list;"))
-    krx_list = []
-    for rowproxy in resultproxy:
-        for _, code in rowproxy.items():
-            krx_list.append(code)
+    trans = db.conn.begin()
+    try:
+        task_logger.info("Extracting krx stock data")
+        resultproxy = db.conn.execute(text("SELECT code FROM raw_data.krx_list;"))
+        krx_list = []
+        for rowproxy in resultproxy:
+            for _, code in rowproxy.items():
+                krx_list.append(code)
+        trans.commit()
+    except Exception as e:
+        trans.rollback()
+        raise e
 
     task_logger.info("Closing connection")
     db.close_connection()

@@ -12,9 +12,7 @@ class DB:
         )
 
     def create_sqlalchemy_engine(self):
-        self.engine = create_engine(
-            self.connection_uri, pool_pre_ping=True, isolation_level="AUTOCOMMIT"
-        )
+        self.engine = create_engine(self.connection_uri, pool_pre_ping=True)
 
     def connect_engine(self):
         self.conn = self.engine.connect()

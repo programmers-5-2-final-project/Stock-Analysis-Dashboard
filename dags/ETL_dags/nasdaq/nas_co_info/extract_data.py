@@ -64,7 +64,7 @@ def extract_nas_co_info_data(task_logger):
 
     task_logger.info("Extracting nas info of listed companies")
     raw_df = extract_nas.info_of_listed_companies()
-    task_logger.info(raw_df["Sector"].values.tolist())
+    # task_logger.info(raw_df["Sector"].values.tolist())
 
     task_logger.info("Loading extracted data to csv")
     df_to_csv(raw_df, nas_co_info_filepath)
