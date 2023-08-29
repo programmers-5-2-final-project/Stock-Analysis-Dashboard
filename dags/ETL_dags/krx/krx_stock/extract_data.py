@@ -27,7 +27,7 @@ def extract_krx_list_data_from_rds(task_logger):
     trans = db.conn.begin()
     try:
         task_logger.info("Extracting krx stock data")
-        resultproxy = db.conn.execute(text("SELECT code FROM raw_data.krx_list;"))
+        resultproxy = db.conn.execute(text("SELECT \"Code\" FROM raw_data.krx_list;"))
         krx_list = []
         for rowproxy in resultproxy:
             for _, code in rowproxy.items():

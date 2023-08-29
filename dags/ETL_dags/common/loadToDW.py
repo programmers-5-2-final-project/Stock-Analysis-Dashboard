@@ -13,7 +13,7 @@ class LoadToRDS:
             query += f'"{column}" {type},'
 
         if primary_key:
-            query += f' PRIMARY KEY("{primary_key}"));'
+            query += f' PRIMARY KEY({primary_key}));'
         else:
             query = query[:-1] + ");"
         self.conn.execute(text(query))
@@ -66,7 +66,7 @@ class LoadToRedshift:
             query += f'"{column}" {type},'
 
         if primary_key:
-            query += f' PRIMARY KEY("{primary_key}"));'
+            query += f' PRIMARY KEY({primary_key}));'
         else:
             query = query[:-1] + ");"
         self.conn.execute(text(query))

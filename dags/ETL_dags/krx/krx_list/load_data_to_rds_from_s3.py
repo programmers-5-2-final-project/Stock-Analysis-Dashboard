@@ -58,7 +58,7 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
             "Stocks": "VARCHAR(300)",
             "MarketId": "VARCHAR(300)",
         }
-        primary_key = "Code"
+        primary_key = '"Code"'
         load_krx_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
