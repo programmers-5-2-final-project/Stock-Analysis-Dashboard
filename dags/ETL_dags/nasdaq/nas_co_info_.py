@@ -1,4 +1,3 @@
-
 # nas_com_info.py
 import pandas as pd
 import os
@@ -27,7 +26,6 @@ from ETL_dags.common.csv import df_to_csv, csv_to_df
 from ETL_dags.nasdaq.constants import FilePath
 
 
-
 CONFIG = dotenv_values(".env")
 if not CONFIG:
     CONFIG = os.environ
@@ -50,8 +48,20 @@ def extract():
         "regularMarketOpen",
         "change",
     ]
+
     def getinfo(symbol):
-    # nas_Symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
+        # nas_Symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
+        try:
+            nasdaq_tickers = yf.Tickers(symbol)
+            ticker_data = nasdaq_tickers.tickers[symbol].info
+            info = [ticker_data[item] for item in header[:-1]]
+            info.append(round(((info[-1] - info[-2]) / info[-2]) * 100, 4))
+            print(f"Successfully fetched data for symbol {symbol}")
+            return info
+        except Exception as e:
+            print(f"Failed to fetch data for symbol {symbol}. Error: {str(e)}")
+            return [symbol] + [None] * (len(header) - 1)
+
     df_nas = fdr.StockListing("NASDAQ")
     nas_Symbols = list(set(df_nas["Symbol"].tolist()))
 
@@ -127,11 +137,11 @@ def rds():
     next(f)  # 헤더 행 건너뛰기
 
     # PostgreSQL RDS 연결 정보 설정
-    db_host = CONFIG["POSTGRES_HOST"]
-    db_port = CONFIG["POSTGRES_PORT"]
+    db_host = CONFIG["RDS_HOST"]
+    db_port = CONFIG["RDS_PORT"]
     db_name = "dev"
-    db_user = CONFIG["POSTGRES_USER"]
-    db_password = CONFIG["POSTGRES_PASSWORD"]
+    db_user = CONFIG["RDS_USER"]
+    db_password = CONFIG["RDS_PASSWORD"]
 
     # RDS 연결
     connection = psycopg2.connect(
@@ -177,4 +187,3 @@ def rds():
 # extract()
 # load()
 # rds()
-

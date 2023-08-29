@@ -58,34 +58,34 @@ def load_krx_list_data_to_redshift_from_s3(task_logger):
         )
 
         task_logger.info("Importing from s3")
-        load_krx_to_rds_from_s3.table_copy_from_s3(
+        load_krx_to_rds_from_s3.table_import_from_s3(
             schema, table, AWS.s3_bucket.value, "krx_list.csv"
         )
 
         task_logger.info("Deleting wrong row")
         load_krx_to_rds_from_s3.delete_wrong_row(schema, table, "code like '%Code%'")
 
-        task_logger.info("Altering columns type")
-        real_column_type = {
-            "Code": "VARCHAR(300)",
-            "ISU_CD": "VARCHAR(300)",
-            "Name": "VARCHAR(300)",
-            "Market": "VARCHAR(300)",
-            "Dept": "VARCHAR(300)",
-            "Close": "BIGINT",
-            "ChangeCode": "BIGINT",
-            "Changes": "BIGINT",
-            "ChangesRatio": "FLOAT",
-            "Open": "BIGINT",
-            "High": "BIGINT",
-            "Low": "BIGINT",
-            "Volume": "BIGINT",
-            "Amount": "BIGINT",
-            "Marcap": "BIGINT",
-            "Stocks": "BIGINT",
-            "MarketId": "VARCHAR(300)",
-        }
-        load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
+        # task_logger.info("Altering columns type")
+        # real_column_type = {
+        #     "Code": "VARCHAR(300)",
+        #     "ISU_CD": "VARCHAR(300)",
+        #     "Name": "VARCHAR(300)",
+        #     "Market": "VARCHAR(300)",
+        #     "Dept": "VARCHAR(300)",
+        #     "Close": "BIGINT",
+        #     "ChangeCode": "BIGINT",
+        #     "Changes": "BIGINT",
+        #     "ChangesRatio": "FLOAT",
+        #     "Open": "BIGINT",
+        #     "High": "BIGINT",
+        #     "Low": "BIGINT",
+        #     "Volume": "BIGINT",
+        #     "Amount": "BIGINT",
+        #     "Marcap": "BIGINT",
+        #     "Stocks": "BIGINT",
+        #     "MarketId": "VARCHAR(300)",
+        # }
+        # load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
         trans.commit()
     except Exception as e:
         trans.rollback()

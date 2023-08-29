@@ -1,4 +1,4 @@
-from ETL_dags.common.loadToDW import LoadToDW
+from ETL_dags.common.loadToDW import LoadToRDS
 from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
@@ -21,7 +21,7 @@ def load_krx_co_info_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_krx_to_rds_from_s3 = LoadToDW(db.conn)
+    load_krx_to_rds_from_s3 = LoadToRDS(db.conn)
 
     try:
         task_logger.info("Installing the aws_s3 extension")
@@ -40,16 +40,16 @@ def load_krx_co_info_data_to_rds_from_s3(task_logger):
 
         task_logger.info("Creating the table raw_data.krx_co_info")
         tmp_column_type = {
-            "Code": "VARCHAR(40)",
+            "Code": "VARCHAR(300)",
             "Name": "VARCHAR(300)",
-            "Market": "VARCHAR(40)",
+            "Market": "VARCHAR(300)",
             "Sector": "VARCHAR(300)",
             "Industry": "VARCHAR(300)",
-            "ListingDate": "VARCHAR(40)",
-            "SettleMonth": "VARCHAR(40)",
+            "ListingDate": "VARCHAR(300)",
+            "SettleMonth": "VARCHAR(300)",
             "Representative": "VARCHAR(300)",
             "HomePage": "VARCHAR(300)",
-            "Region": "VARCHAR(40)",
+            "Region": "VARCHAR(300)",
         }
         primary_key = "Code"
         load_krx_to_rds_from_s3.create_table(
@@ -72,16 +72,16 @@ def load_krx_co_info_data_to_rds_from_s3(task_logger):
 
         task_logger.info("Altering columns type")
         real_column_type = {
-            "Code": "VARCHAR(40)",
+            "Code": "VARCHAR(300)",
             "Name": "VARCHAR(300)",
             "Market": "VARCHAR(40)",
             "Sector": "VARCHAR(300)",
             "Industry": "VARCHAR(300)",
             "ListingDate": "TIMESTAMP",
-            "SettleMonth": "VARCHAR(40)",
+            "SettleMonth": "VARCHAR(300)",
             "Representative": "VARCHAR(300)",
             "HomePage": "VARCHAR(300)",
-            "Region": "VARCHAR(40)",
+            "Region": "VARCHAR(300)",
         }
         load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
         trans.commit()

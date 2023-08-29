@@ -1,10 +1,10 @@
-from ETL_dags.common.loadToDW import LoadToRDS
+from ETL_dags.common.loadToDW import LoadToRedshift
 from ETL_dags.common.db import DB
 from ETL_dags.raw_material.constants import RDS, AWS
 import sqlalchemy
 
 
-def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
+def load_raw_material_price_data_to_redshift_from_s3(task_logger, raw_material):
     task_logger.info("Creating DB instance")
     db = DB(
         RDS.rds_user.value,
@@ -21,7 +21,7 @@ def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_raw_material_to_rds_from_s3 = LoadToRDS(db.engine)
+    load_raw_material_to_rds_from_s3 = LoadToRedshift(db.engine)
 
     schema = "raw_data"
     table = f"{raw_material}_price"
@@ -125,8 +125,8 @@ def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
         schema, table, "date like '%date%'"
     )
 
-    task_logger.info("Altering columns type")
-    load_raw_material_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
+    # task_logger.info("Altering columns type")
+    # load_raw_material_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
 
     task_logger.info("Closing connection")
     db.close_connection()

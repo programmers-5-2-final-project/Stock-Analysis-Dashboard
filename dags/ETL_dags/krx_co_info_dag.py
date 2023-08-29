@@ -32,6 +32,9 @@ from ETL_dags.krx.krx_co_info.load_data_to_s3 import load_krx_co_info_data_to_s3
 from ETL_dags.krx.krx_co_info.load_data_to_rds_from_s3 import (
     load_krx_co_info_data_to_rds_from_s3,
 )
+from ETL_dags.krx.krx_co_info.load_data_to_redshift_from_s3 import (
+    load_krx_co_info_data_to_redshift_from_s3,
+)
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -61,9 +64,10 @@ def load_krx_co_info_to_s3(_):
 
 
 @task
-def load_krx_co_info_to_rds_from_s3(_):
+def load_krx_co_info_to_dw_from_s3(_):
     task_logger.info("Load krx_co_info_to_rds_from_s3")
     load_krx_co_info_data_to_rds_from_s3(task_logger)
+    load_krx_co_info_data_to_redshift_from_s3(task_logger)
 
     return True
 
@@ -74,6 +78,6 @@ with DAG(
     schedule="0 0 * * *",
     start_date=days_ago(1),
 ) as dag:
-    load_krx_co_info_to_rds_from_s3(
+    load_krx_co_info_to_dw_from_s3(
         load_krx_co_info_to_s3(transform_krx_co_info(extract_krx_co_info()))
     )

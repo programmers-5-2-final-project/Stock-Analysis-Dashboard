@@ -32,6 +32,9 @@ from ETL_dags.snp500.snp_list.load_data_to_s3 import load_snp_list_data_to_s3
 from ETL_dags.snp500.snp_list.load_data_to_rds_from_s3 import (
     load_snp_list_data_to_rds_from_s3,
 )
+from ETL_dags.snp500.snp_list.load_data_to_redshift_from_s3 import (
+    load_snp_list_data_to_redshift_from_s3,
+)
 
 task_logger = logging.getLogger("airflow.task")  # airflow log에 남기기 위한 사전작업.
 
@@ -49,9 +52,7 @@ def extract_snp_stock_list() -> bool:
 
 
 @task
-def transform_snp_stock_list(
-    _extract_snp_stock: bool,
-) -> bool:  # 기업 단위로 추출한 주식 데이터 전처리 테스크
+def transform_snp_stock_list(_) -> bool:  # 기업 단위로 추출한 주식 데이터 전처리 테스크
     """
     input: snp500의 심볼리스트
     output: 전처리된 snp500 데이터를 ./data/snp_list.csv 파일로 저장하여 전달
@@ -63,9 +64,7 @@ def transform_snp_stock_list(
 
 
 @task
-def load_snp_stock_list_to_s3(
-    transform_snp_stock: bool,
-) -> bool:  # 기업 단위로 S3에 주식 데이터를 로드하는 테스크
+def load_snp_stock_list_to_s3(_) -> bool:  # 기업 단위로 S3에 주식 데이터를 로드하는 테스크
     """
     input: .env 목록
     output: S3에 snp_stock_list.csv 오브젝트로 저장
@@ -78,7 +77,7 @@ def load_snp_stock_list_to_s3(
 
 
 @task
-def load_snp_stock_list_to_rds_from_s3(_load_snp_stock_to_s3: bool) -> bool:
+def load_snp_stock_list_to_dw_from_s3(_) -> bool:
     """
     input: s3 오브젝트인 snp_stock_list.csv
     output: rds에 raw_data.snp_stock_list table 생성
@@ -86,6 +85,7 @@ def load_snp_stock_list_to_rds_from_s3(_load_snp_stock_to_s3: bool) -> bool:
 
     task_logger.info(f"Load_snp_stock_list_to_rds_from_s3")
     load_snp_list_data_to_rds_from_s3(task_logger)
+    load_snp_list_data_to_redshift_from_s3(task_logger)
 
     return True
 
@@ -98,24 +98,6 @@ with DAG(
     catchup=False,
     tags=["API"],
 ) as dag:
-    # if __name__ == "__main__":
-    # _extract_snp_list = (
-    #     extract_snp_stock_list()
-    # )  # KRX(코스피, 코스닥, 코스넷)에 상장되어 있는 현재 기업의 심볼을 추출 테스크 실행
-    # snp_list = pd.read_csv("./data/snp_list.csv")  # 저장된 기업리스트 불러옴
-    # snp_list = snp_list["Symbol"].tolist()
-
-    # Airflow에서 테스트 시,
-    # 로컬에서 테스트 시,
-    # CONFIG = dotenv_values("../.env")  # .env 파일에 숨겨진 값(AWS ACCESS KEY)을 사용하기 위함.
-
-    # 함수의 결과값 인자를 넘겨줌으로써 태스크 간 의존성을 설정함.
-    # _extract_snp_stock_list = extract_snp_stock_list()
-    # _transform_snp_stock_list = transform_snp_stock_list(_extract_snp_stock_list)
-    # _load_snp_stock_list_to_s3 = load_snp_stock_list_to_s3(_transform_snp_stock_list)
-    # _load_snp_stock_list_to_rds_from_s3 = load_snp_stock_list_to_rds_from_s3(
-    #     _load_snp_stock_list_to_s3
-    # )
-    load_snp_stock_list_to_rds_from_s3(
+    load_snp_stock_list_to_dw_from_s3(
         load_snp_stock_list_to_s3(transform_snp_stock_list(extract_snp_stock_list()))
     )

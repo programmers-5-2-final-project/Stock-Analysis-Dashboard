@@ -12,6 +12,10 @@ from ETL_dags.nasdaq.nas.load_data_to_rds_from_s3 import (
     load_nas_list_data_to_rds_from_s3,
     load_nas_stock_data_to_rds_from_s3,
 )
+from ETL_dags.nasdaq.nas.load_data_to_redshift_from_s3 import (
+    load_nas_list_data_to_redshift_from_s3,
+    load_nas_stock_data_to_redshift_from_s3,
+)
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -41,10 +45,12 @@ def load_nas_stock_to_s3():
 
 # S3에 적재한 주식데이터를 RDS(DW)에 COPY 테스크
 @task
-def load_nas_stock_to_rds_from_s3():
+def load_nas_stock_to_dw_from_s3():
     task_logger.info("Load nas_stock_to_rds_from_s3")
     load_nas_list_data_to_rds_from_s3(task_logger)
     load_nas_stock_data_to_rds_from_s3(task_logger)
+    load_nas_list_data_to_redshift_from_s3(task_logger)
+    load_nas_stock_data_to_redshift_from_s3(task_logger)
     return
 
 
@@ -58,5 +64,5 @@ with DAG(
         extract_nas_list()
         >> extract_nas_stock()
         >> load_nas_stock_to_s3()
-        >> load_nas_stock_to_rds_from_s3()
+        >> load_nas_stock_to_dw_from_s3()
     )  # dag의 task를 순서대로 연결해줍니다. >> 를 사용하시면 됩니다.

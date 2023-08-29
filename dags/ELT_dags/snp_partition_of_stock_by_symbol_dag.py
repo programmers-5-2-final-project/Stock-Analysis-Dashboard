@@ -114,7 +114,7 @@ def insert_into_table(_):
 
 
 with DAG(
-    dag_id="snp_partition_of_stock_by_code8",
+    dag_id="snp_partition_of_stock_by_code9",
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
@@ -125,11 +125,11 @@ with DAG(
 
     # connect RDS
     connection_uri = "postgresql://{}:{}@{}:{}/{}".format(
-        CONFIG["POSTGRES_USER"],
-        CONFIG["POSTGRES_PASSWORD"],
-        CONFIG["POSTGRES_HOST"],
-        CONFIG["POSTGRES_PORT"],
-        CONFIG["POSTGRES_DB"],
+        CONFIG["RDS_USER"],
+        CONFIG["RDS_PASSWORD"],
+        CONFIG["RDS_HOST"],
+        CONFIG["RDS_PORT"],
+        CONFIG["RDS_DB"],
     )
     engine = create_engine(
         connection_uri, pool_pre_ping=True, isolation_level="AUTOCOMMIT"

@@ -1,10 +1,10 @@
-from ETL_dags.common.loadToDW import LoadToRDS
+from ETL_dags.common.loadToDW import LoadToRedshift
 from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
 
 
-def load_krx_list_data_to_rds_from_s3(task_logger):
+def load_krx_stock_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
         RDS.rds_user.value,
@@ -21,7 +21,7 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_krx_to_rds_from_s3 = LoadToRDS(db.conn)
+    load_krx_to_rds_from_s3 = LoadToRedshift(db.conn)
 
     try:
         task_logger.info("Installing the aws_s3 extension")
@@ -33,32 +33,22 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
     trans = db.conn.begin()
     try:
         schema = "raw_data"
-        table = "krx_list"
+        table = "krx_stock"
 
-        task_logger.info("Dropping existing raw_data.krx_list")
+        task_logger.info("Dropping existing raw_data.krx_stock")
         load_krx_to_rds_from_s3.drop_table(schema, table)
 
-        task_logger.info("Creating the table raw_data.krx_list")
+        task_logger.info("Creating the table raw_data.krx_stock")
         tmp_column_type = {
-            "Code": "VARCHAR(300)",
-            "ISU_CD": "VARCHAR(300)",
-            "Name": "VARCHAR(300)",
-            "Market": "VARCHAR(300)",
-            "Dept": "VARCHAR(300)",
-            "Close": "VARCHAR(300)",
-            "ChangeCode": "VARCHAR(300)",
-            "Changes": "VARCHAR(300)",
-            "ChangesRatio": "VARCHAR(300)",
+            "Date": "VARCHAR(300)",
             "Open": "VARCHAR(300)",
             "High": "VARCHAR(300)",
             "Low": "VARCHAR(300)",
+            "Close": "VARCHAR(300)",
             "Volume": "VARCHAR(300)",
-            "Amount": "VARCHAR(300)",
-            "Marcap": "VARCHAR(300)",
-            "Stocks": "VARCHAR(300)",
-            "MarketId": "VARCHAR(300)",
+            "Code": "VARCHAR(300)",
         }
-        primary_key = "Code"
+        primary_key = "Date, Code"
         load_krx_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
@@ -68,7 +58,7 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
             schema,
             table,
             AWS.s3_bucket.value,
-            "krx_list.csv",
+            "krx_stock.csv",
             AWS.region.value,
             AWS.aws_access_key_id.value,
             AWS.aws_secret_access_key.value,
@@ -77,28 +67,18 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
         task_logger.info("Deleting wrong row")
         load_krx_to_rds_from_s3.delete_wrong_row(schema, table, "code like '%Code%'")
 
-        task_logger.info("Altering columns type")
-        real_column_type = {
-            "Code": "VARCHAR(300)",
-            "ISU_CD": "VARCHAR(300)",
-            "Name": "VARCHAR(300)",
-            "Market": "VARCHAR(300)",
-            "Dept": "VARCHAR(300)",
-            "Close": "BIGINT",
-            "ChangeCode": "BIGINT",
-            "Changes": "BIGINT",
-            "ChangesRatio": "FLOAT",
-            "Open": "BIGINT",
-            "High": "BIGINT",
-            "Low": "BIGINT",
-            "Volume": "BIGINT",
-            "Amount": "BIGINT",
-            "Marcap": "BIGINT",
-            "Stocks": "BIGINT",
-            "MarketId": "VARCHAR(300)",
-        }
-        load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
-        trans.commit()
+        # task_logger.info("Altering columns type")
+        # real_column_type = {
+        #     "Date": "TIMESTAMP",
+        #     "Open": "INTEGER",
+        #     "High": "INTEGER",
+        #     "Low": "INTEGER",
+        #     "Close": "INTEGER",
+        #     "Volume": "INTEGER",
+        #     "Code": "VARCHAR(40)",
+        # }
+        # load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
+        # trans.commit()
     except Exception as e:
         trans.rollback()
         raise e

@@ -1,10 +1,10 @@
-from ETL_dags.common.loadToDW import LoadToRDS
+from ETL_dags.common.loadToDW import LoadToRedshift
 from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
 
 
-def load_nas_list_data_to_rds_from_s3(task_logger):
+def load_nas_list_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
         RDS.rds_user.value,
@@ -21,7 +21,7 @@ def load_nas_list_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_nas_list = LoadToRDS(db.conn)
+    load_nas_list = LoadToRedshift(db.conn)
 
     try:
         task_logger.info("Installing the aws_s3 extension")
@@ -70,7 +70,7 @@ def load_nas_list_data_to_rds_from_s3(task_logger):
     db.dispose_sqlalchemy_engine()
 
 
-def load_nas_stock_data_to_rds_from_s3(task_logger):
+def load_nas_stock_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
         RDS.rds_user.value,
@@ -87,7 +87,7 @@ def load_nas_stock_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_nas_stock = LoadToDW(db.conn)
+    load_nas_stock = LoadToRedshift(db.conn)
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_nas_stock.install_aws_s3_extension()

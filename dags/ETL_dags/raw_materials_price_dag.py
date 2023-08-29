@@ -1,22 +1,18 @@
 from airflow import DAG
 from airflow.decorators import task
-from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import days_ago
 
-import boto3
-import os
 import logging
-import sys
-from dotenv import load_dotenv
 from datetime import datetime
-import pandas as pd
-from sqlalchemy import create_engine
-import quandl  # 금, 은 가격
 from datetime import datetime, timedelta
 from ETL_dags.raw_material.extract_data import extract_raw_material_price_data
 from ETL_dags.raw_material.load_data_to_s3 import load_raw_material_price_data_to_s3
 from ETL_dags.raw_material.load_data_to_rds_from_s3 import (
     load_raw_material_price_data_to_rds_from_s3,
+)
+
+from ETL_dags.raw_material.load_data_to_redshift_from_s3 import (
+    load_raw_material_price_data_to_redshift_from_s3,
 )
 
 task_logger = logging.getLogger("airflow.task")
@@ -50,9 +46,10 @@ def load_raw_material_price_to_s3(raw_material):
 
 
 @task
-def load_raw_material_price_to_rds_from_s3(raw_material):
+def load_raw_material_price_to_dw_from_s3(raw_material):
     task_logger.info(f"load_{raw_material}_price_to_rds_from_s3")
     load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material)
+    load_raw_material_price_data_to_redshift_from_s3(task_logger, raw_material)
 
     return True
 
@@ -76,7 +73,7 @@ with DAG(
     dag_id="raw_materials_dag24",
     schedule="0 0 * * *",
     start_date=days_ago(1),
-    # default_args=default_args,
+    default_args=default_args,
 ) as dag:
     date = set_start_end_date()
 
@@ -89,7 +86,7 @@ with DAG(
         _raw_material = load_raw_material_price_to_s3.override(
             task_id=f"load_{raw_material}_price_to_s3"
         )(_raw_material)
-        result = load_raw_material_price_to_rds_from_s3.override(
+        result = load_raw_material_price_to_dw_from_s3.override(
             task_id=f"load_{raw_material}_price_to_rds_from_s3"
         )(_raw_material)
         etl.append(result)

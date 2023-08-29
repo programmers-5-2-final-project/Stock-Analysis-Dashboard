@@ -72,7 +72,7 @@ class LoadToRedshift:
             query = query[:-1] + ");"
         self.conn.execute(text(query))
 
-    def table_copy_from_s3(
+    def table_import_from_s3(
         self,
         schema,
         table,
