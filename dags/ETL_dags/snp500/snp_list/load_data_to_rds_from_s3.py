@@ -45,7 +45,7 @@ def load_snp_list_data_to_rds_from_s3(task_logger):
             "Sector": "VARCHAR(300)",
             "Industry": "VARCHAR(300)",
         }
-        primary_key = "Symbol"
+        primary_key = '"Symbol"'
         load_snp500_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
@@ -63,7 +63,7 @@ def load_snp_list_data_to_rds_from_s3(task_logger):
 
         task_logger.info("Deleting wrong row")
         load_snp500_to_rds_from_s3.delete_wrong_row(
-            schema, table, "symbol like '%Symbol%'"
+            schema, table, "\"Symbol\" like '%Symbol%'"
         )
         # 트랜잭션 종료
         trans.commit()

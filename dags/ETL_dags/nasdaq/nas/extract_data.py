@@ -5,7 +5,7 @@ import FinanceDataReader as fdr
 import pandas as pd
 import time
 import billiard as mp
-
+from concurrent.futures import ThreadPoolExecutor
 
 def extract_nas_list_data(task_logger):
     extract = Extract("NASDAQ")
@@ -46,14 +46,16 @@ def extract_nas_stock_data(task_logger=None):
     df.to_csv(nas_stock_filepath, index=False)  # index는 저장하지 않음
 
     nas_Symbols_split = []
-    for i in range(0, len(nas_Symbols) // 1500 + 1):
-        nas_Symbols_split.append(nas_Symbols[i * 1500 : (i + 1) * 1500])
+    for i in range(0, len(nas_Symbols) // 1000 + 1):
+        nas_Symbols_split.append(nas_Symbols[i * 1000 : (i + 1) * 1000])
 
-    cpu_count = mp.cpu_count() - 2
+    # cpu_count = mp.cpu_count() - 2
     for n, nas_Symbols in enumerate(nas_Symbols_split):
         task_logger.info(f"*********************nas_Symbols_{n}*********************")
-        with mp.Pool(cpu_count) as pool:
-            pool.map(to_nas_stock_csv, nas_Symbols)
+        with ThreadPoolExecutor(max_workers=6) as executor:
+            executor.map(to_nas_stock_csv, nas_Symbols)
+        # with mp.Pool(cpu_count) as pool:
+        #     pool.map(to_nas_stock_csv, nas_Symbols)
         task_logger.info(f"*********************sleeping...*************************")
         time.sleep(120)
 

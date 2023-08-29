@@ -23,12 +23,6 @@ def load_nas_list_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating LoadToDW instance")
     load_nas_list = LoadToRedshift(db.conn)
 
-    try:
-        task_logger.info("Installing the aws_s3 extension")
-        load_nas_list.install_aws_s3_extension()
-    except sqlalchemy.exc.ProgrammingError:
-        task_logger.info("aws_s3 extension already exists")
-
     # 트랜잭션 시작
     trans = db.conn.begin()
     try:
@@ -54,9 +48,6 @@ def load_nas_list_data_to_redshift_from_s3(task_logger):
             table,
             AWS.s3_bucket.value,
             "nas_list.csv",
-            AWS.region.value,
-            AWS.aws_access_key_id.value,
-            AWS.aws_secret_access_key.value,
         )
         trans.commit()
     except Exception as e:
