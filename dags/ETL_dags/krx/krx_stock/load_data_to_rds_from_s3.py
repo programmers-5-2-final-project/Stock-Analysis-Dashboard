@@ -1,4 +1,4 @@
-from ETL_dags.common.loadToDW import LoadToDW
+from ETL_dags.common.loadToDW import LoadToRDS
 from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
@@ -21,7 +21,7 @@ def load_krx_stock_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_krx_to_rds_from_s3 = LoadToDW(db.conn)
+    load_krx_to_rds_from_s3 = LoadToRDS(db.conn)
 
     try:
         task_logger.info("Installing the aws_s3 extension")
@@ -40,15 +40,15 @@ def load_krx_stock_data_to_rds_from_s3(task_logger):
 
         task_logger.info("Creating the table raw_data.krx_stock")
         tmp_column_type = {
-            "Date": "VARCHAR(40)",
-            "Open": "VARCHAR(40)",
-            "High": "VARCHAR(40)",
-            "Low": "VARCHAR(40)",
-            "Close": "VARCHAR(40)",
-            "Volume": "VARCHAR(40)",
-            "Code": "VARCHAR(40)",
+            "Date": "VARCHAR(300)",
+            "Open": "VARCHAR(300)",
+            "High": "VARCHAR(300)",
+            "Low": "VARCHAR(300)",
+            "Close": "VARCHAR(300)",
+            "Volume": "VARCHAR(300)",
+            "Code": "VARCHAR(300)",
         }
-        primary_key = "Date, Code"
+        primary_key = '"Date", "Code"'
         load_krx_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
@@ -65,17 +65,17 @@ def load_krx_stock_data_to_rds_from_s3(task_logger):
         )
 
         task_logger.info("Deleting wrong row")
-        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, "code like '%Code%'")
+        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, '"Code" like \'%Code%\'')
 
         task_logger.info("Altering columns type")
         real_column_type = {
             "Date": "TIMESTAMP",
-            "Open": "INTEGER",
-            "High": "INTEGER",
-            "Low": "INTEGER",
-            "Close": "INTEGER",
-            "Volume": "INTEGER",
-            "Code": "VARCHAR(40)",
+            "Open": "BIGINT",
+            "High": "BIGINT",
+            "Low": "BIGINT",
+            "Close": "BIGINT",
+            "Volume": "BIGINT",
+            "Code": "VARCHAR(300)",
         }
         load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
         trans.commit()

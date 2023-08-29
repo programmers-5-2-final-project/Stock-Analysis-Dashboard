@@ -1,17 +1,17 @@
-from ETL_dags.common.loadToDW import LoadToRDS
+from ETL_dags.common.loadToDW import LoadToRedshift
 from ETL_dags.common.db import DB
-from ETL_dags.raw_material.constants import RDS, AWS
+from ETL_dags.raw_material.constants import REDSHIFT, AWS
 import sqlalchemy
 
 
-def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
+def load_raw_material_price_data_to_redshift_from_s3(task_logger, raw_material):
     task_logger.info("Creating DB instance")
     db = DB(
-        RDS.rds_user.value,
-        RDS.rds_password.value,
-        RDS.rds_host.value,
-        RDS.rds_port.value,
-        RDS.rds_dbname.value,
+        REDSHIFT.redshift_user.value,
+        REDSHIFT.redshift_password.value,
+        REDSHIFT.redshift_host.value,
+        REDSHIFT.redshift_port.value,
+        REDSHIFT.redshift_dbname.value,
     )
 
     task_logger.info("Creating sqlalchemy engine")
@@ -21,13 +21,13 @@ def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_raw_material_to_rds_from_s3 = LoadToRDS(db.engine)
+    load_raw_material_to_redshift_from_s3 = LoadToRedshift(db.engine)
 
     schema = "raw_data"
     table = f"{raw_material}_price"
 
     task_logger.info(f"Dropping existing {schema}.{table}")
-    load_raw_material_to_rds_from_s3.drop_table(schema, table)
+    load_raw_material_to_redshift_from_s3.drop_table(schema, table)
 
     task_logger.info(f"Creating the table {schema}.{table}")
     tmp_gold_column_type = {
@@ -99,34 +99,25 @@ def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
         real_column_type = real_orb_column_type
 
     primary_key = '"date"'
-    load_raw_material_to_rds_from_s3.create_table(
+    load_raw_material_to_redshift_from_s3.create_table(
         schema, table, tmp_column_type, primary_key
     )
 
-    try:
-        task_logger.info("Installing the aws_s3 extension")
-        load_raw_material_to_rds_from_s3.install_aws_s3_extension()
-    except sqlalchemy.exc.ProgrammingError:
-        task_logger.info("aws_s3 extension already exists")
-
     task_logger.info("Importing from s3")
-    load_raw_material_to_rds_from_s3.table_import_from_s3(
+    load_raw_material_to_redshift_from_s3.table_import_from_s3(
         schema,
         table,
         AWS.s3_bucket.value,
         f"{raw_material}_price.csv",
-        AWS.region.value,
-        AWS.aws_access_key_id.value,
-        AWS.aws_secret_access_key.value,
     )
 
     task_logger.info("Deleting wrong row")
-    load_raw_material_to_rds_from_s3.delete_wrong_row(
+    load_raw_material_to_redshift_from_s3.delete_wrong_row(
         schema, table, "\"date\" like '%date%'"
     )
 
-    task_logger.info("Altering columns type")
-    load_raw_material_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
+    # task_logger.info("Altering columns type")
+    # load_raw_material_to_redshift_from_s3.alter_column_type(schema, table, real_column_type)
 
     task_logger.info("Closing connection")
     db.close_connection()

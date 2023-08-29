@@ -1,6 +1,5 @@
 from sqlalchemy import create_engine, text
 
-
 class DB:
     def __init__(self, dw_user, dw_password, dw_host, dw_port, dw_dbname):
         self.connection_uri = "postgresql://{}:{}@{}:{}/{}".format(
@@ -22,3 +21,4 @@ class DB:
 
     def dispose_sqlalchemy_engine(self):
         self.engine.dispose()
+    

@@ -21,7 +21,9 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_krx_to_rds_from_s3 = LoadToDW(db.conn)
+
+    load_krx_to_rds_from_s3 = LoadToRDS(db.conn)
+
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_krx_to_rds_from_s3.install_aws_s3_extension()
@@ -57,7 +59,7 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
             "Stocks": "VARCHAR(40)",
             "MarketId": "VARCHAR(40)",
         }
-        primary_key = "Code"
+        primary_key = '"Code"'
         load_krx_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
@@ -74,7 +76,7 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
         )
 
         task_logger.info("Deleting wrong row")
-        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, "code like '%Code%'")
+        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, '"Code" like \'%Code%\'')
 
         task_logger.info("Altering columns type")
         real_column_type = {

@@ -17,7 +17,7 @@ def transform_krx_stock_data(task_logger):
     transformed_krx.drop_nan(["Date", "Code"])
 
     task_logger.info("Filling Nan with forward value")
-    transformed_krx.fill_nan()
+    transformed_krx.fill_nan(method="ffill")
 
     task_logger.info("Formatting Code")
     transformed_krx.format_column_zfill("Code", 6)

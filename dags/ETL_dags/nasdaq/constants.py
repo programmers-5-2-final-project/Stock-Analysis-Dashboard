@@ -22,8 +22,16 @@ class AWS(Enum):
 
 
 class RDS(Enum):
-    rds_user = CONFIG["POSTGRES_USER"]
-    rds_password = CONFIG["POSTGRES_PASSWORD"]
-    rds_host = CONFIG["POSTGRES_HOST"]
-    rds_port = CONFIG["POSTGRES_PORT"]
-    rds_dbname = CONFIG["POSTGRES_DB"]
+    rds_user = CONFIG["RDS_USER"]
+    rds_password = CONFIG["RDS_PASSWORD"]
+    rds_host = CONFIG["RDS_HOST"]
+    rds_port = CONFIG["RDS_PORT"]
+    rds_dbname = CONFIG["RDS_DB"]
+
+
+class REDSHIFT(Enum):
+    redshift_user = CONFIG["REDSHIFT_USER"]
+    redshift_password = CONFIG["REDSHIFT_PASSWORD"]
+    redshift_host = CONFIG["REDSHIFT_HOST"]
+    redshift_port = CONFIG["REDSHIFT_PORT"]
+    redshift_dbname = CONFIG["REDSHIFT_DB"]

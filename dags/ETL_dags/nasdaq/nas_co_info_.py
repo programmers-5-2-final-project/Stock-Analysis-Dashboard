@@ -1,4 +1,3 @@
-# nas_co_info.py
 import pandas as pd
 import os
 import boto3
@@ -17,6 +16,11 @@ sys.path.append(
         os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
     )
 )
+
+
+from ETL_dags.common.extract import Extract
+from ETL_dags.common.csv import df_to_csv, csv_to_df
+from ETL_dags.nasdaq.constants import FilePath
 
 
 CONFIG = dotenv_values(".env")
@@ -41,6 +45,7 @@ def extract():
         "regularMarketOpen",
         "change",
     ]
+
 
     def getinfo(symbol):
         try:
@@ -110,11 +115,11 @@ def rds():
     next(f)  # 헤더 행 건너뛰기
 
     # PostgreSQL RDS 연결 정보 설정
-    db_host = CONFIG["POSTGRES_HOST"]
-    db_port = CONFIG["POSTGRES_PORT"]
+    db_host = CONFIG["RDS_HOST"]
+    db_port = CONFIG["RDS_PORT"]
     db_name = "dev"
-    db_user = CONFIG["POSTGRES_USER"]
-    db_password = CONFIG["POSTGRES_PASSWORD"]
+    db_user = CONFIG["RDS_USER"]
+    db_password = CONFIG["RDS_PASSWORD"]
 
     # RDS 연결
     connection = psycopg2.connect(

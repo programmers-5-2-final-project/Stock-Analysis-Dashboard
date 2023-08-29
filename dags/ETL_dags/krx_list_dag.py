@@ -76,19 +76,21 @@ def load_krx_list_to_s3(_):
 
 
 @task
-def load_krx_list_to_rds_from_s3(_):
+def load_krx_list_to_dw_from_s3(_):
     """
     input: s3오브젝트인 krx_list.csv | output: rds에 raw_data.krx_list table
     """
     task_logger.info("Load krx_list_to_rds_from_s3")
 
     load_krx_list_data_to_rds_from_s3(task_logger)
+    load_krx_list_data_to_redshift_from_s3(task_logger)
+
 
     return True
 
 
 with DAG(
-    dag_id="krx_list_dag29",
+    dag_id="krx_list_dag45",
     doc_md=doc_md,
     schedule="0 0 * * *",
     start_date=days_ago(1),
@@ -96,6 +98,6 @@ with DAG(
         "on_failure_callback": slack.on_failure_callback,
     },
 ) as dag:
-    load_krx_list_to_rds_from_s3(
+    load_krx_list_to_dw_from_s3(
         load_krx_list_to_s3(transform_krx_list(extract_krx_list()))
     )

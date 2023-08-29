@@ -138,11 +138,11 @@ with DAG(
 
     # connect RDS
     connection_uri = "postgresql://{}:{}@{}:{}/{}".format(
-        CONFIG["POSTGRES_USER"],
-        CONFIG["POSTGRES_PASSWORD"],
-        CONFIG["POSTGRES_HOST"],
-        CONFIG["POSTGRES_PORT"],
-        CONFIG["POSTGRES_DB"],
+        CONFIG["RDS_USER"],
+        CONFIG["RDS_PASSWORD"],
+        CONFIG["RDS_HOST"],
+        CONFIG["RDS_PORT"],
+        CONFIG["RDS_DB"],
     )
     engine = create_engine(
         connection_uri, pool_pre_ping=True, isolation_level="AUTOCOMMIT"

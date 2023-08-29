@@ -1,17 +1,17 @@
-from ETL_dags.common.loadToDW import LoadToRDS
+from ETL_dags.common.loadToDW import LoadToRedshift
 from ETL_dags.common.db import DB
-from ETL_dags.krx.constants import RDS, AWS
+from ETL_dags.krx.constants import REDSHIFT, AWS
 import sqlalchemy
 
 
-def load_nas_list_data_to_rds_from_s3(task_logger):
+def load_nas_list_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
-        RDS.rds_user.value,
-        RDS.rds_password.value,
-        RDS.rds_host.value,
-        RDS.rds_port.value,
-        RDS.rds_dbname.value,
+        REDSHIFT.redshift_user.value,
+        REDSHIFT.redshift_password.value,
+        REDSHIFT.redshift_host.value,
+        REDSHIFT.redshift_port.value,
+        REDSHIFT.redshift_dbname.value,
     )
 
     task_logger.info("Creating sqlalchemy engine")
@@ -21,7 +21,7 @@ def load_nas_list_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_nas_list = LoadToRDS(db.conn)
+    load_nas_list = LoadToRedshift(db.conn)
 
     try:
         task_logger.info("Installing the aws_s3 extension")
@@ -70,14 +70,14 @@ def load_nas_list_data_to_rds_from_s3(task_logger):
     db.dispose_sqlalchemy_engine()
 
 
-def load_nas_stock_data_to_rds_from_s3(task_logger):
+def load_nas_stock_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
-        RDS.rds_user.value,
-        RDS.rds_password.value,
-        RDS.rds_host.value,
-        RDS.rds_port.value,
-        RDS.rds_dbname.value,
+        REDSHIFT.redshift_user.value,
+        REDSHIFT.redshift_password.value,
+        REDSHIFT.redshift_host.value,
+        REDSHIFT.redshift_port.value,
+        REDSHIFT.redshift_dbname.value,
     )
 
     task_logger.info("Creating sqlalchemy engine")
@@ -87,7 +87,7 @@ def load_nas_stock_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_nas_stock = LoadToDW(db.conn)
+    load_nas_stock = LoadToRedshift(db.conn)
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_nas_stock.install_aws_s3_extension()
@@ -123,27 +123,24 @@ def load_nas_stock_data_to_rds_from_s3(task_logger):
             schema,
             table,
             AWS.s3_bucket.value,
-            "nas_stock.csv",
-            AWS.region.value,
-            AWS.aws_access_key_id.value,
-            AWS.aws_secret_access_key.value,
+            "nas_stock.csv"
         )
 
         task_logger.info("Deleting wrong row")
-        load_nas_stock.delete_wrong_row(schema, table, "symbol like '%Symbol%'")
+        load_nas_stock.delete_wrong_row(schema, table, "\"Symbol\" like '%Symbol%'")
 
-        task_logger.info("Altering columns type")
-        real_column_type = {
-            "Date": "Date",
-            "Open": "FLOAT",
-            "High": "FLOAT",
-            "Low": "FLOAT",
-            "Close": "FLOAT",
-            "Adj_Close": "FLOAT",
-            "Volume": "FLOAT",
-            "Symbol": "VARCHAR(300)",
-        }
-        load_nas_stock.alter_column_type(schema, table, real_column_type)
+        # task_logger.info("Altering columns type")
+        # real_column_type = {
+        #     "Date": "Date",
+        #     "Open": "FLOAT",
+        #     "High": "FLOAT",
+        #     "Low": "FLOAT",
+        #     "Close": "FLOAT",
+        #     "Adj_Close": "FLOAT",
+        #     "Volume": "FLOAT",
+        #     "Symbol": "VARCHAR(300)",
+        # }
+        # load_nas_stock.alter_column_type(schema, table, real_column_type)
         trans.commit()
     except Exception as e:
         trans.rollback()

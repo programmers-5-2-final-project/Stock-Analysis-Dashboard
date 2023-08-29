@@ -186,11 +186,11 @@ def rds():
     next(f)  # 헤더 행 건너뛰기
 
     # PostgreSQL RDS 연결 정보 설정
-    db_host = CONFIG["POSTGRES_HOST"]
-    db_port = CONFIG["POSTGRES_PORT"]
+    db_host = CONFIG["RDS_HOST"]
+    db_port = CONFIG["RDS_PORT"]
     db_name = "dev"
-    db_user = CONFIG["POSTGRES_USER"]
-    db_password = CONFIG["POSTGRES_PASSWORD"]
+    db_user = CONFIG["RDS_USER"]
+    db_password = CONFIG["RDS_PASSWORD"]
 
     # RDS 연결
     connection = psycopg2.connect(

@@ -1,4 +1,4 @@
-from ETL_dags.common.loadToDW import LoadToDW
+from ETL_dags.common.loadToDW import LoadToRDS
 from ETL_dags.common.db import DB
 from ETL_dags.snp500.constants import RDS, AWS
 import sqlalchemy
@@ -21,7 +21,7 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_snp500_to_rds_from_s3 = LoadToDW(db.conn)
+    load_snp500_to_rds_from_s3 = LoadToRDS(db.conn)
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_snp500_to_rds_from_s3.install_aws_s3_extension()
@@ -38,14 +38,14 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
 
         task_logger.info("Creating the table raw_data.snp_stock")
         tmp_column_type = {
-            "Date": "VARCHAR(40)",
-            "Open": "VARCHAR(40)",
-            "High": "VARCHAR(40)",
-            "Low": "VARCHAR(40)",
-            "Close": "VARCHAR(40)",
-            "Volume": "VARCHAR(40)",
-            "Symbol": "VARCHAR(40)",
-            "Change": "VARCHAR(40)",
+            "Date": "VARCHAR(300)",
+            "Open": "VARCHAR(300)",
+            "High": "VARCHAR(300)",
+            "Low": "VARCHAR(300)",
+            "Close": "VARCHAR(300)",
+            "Volume": "VARCHAR(300)",
+            "Symbol": "VARCHAR(300)",
+            "Change": "VARCHAR(300)",
         }
 
         primary_key = "Date, Symbol"
@@ -78,7 +78,7 @@ def load_snp_stock_data_to_rds_from_s3(task_logger):
             "Close": "FLOAT",
             "Volume": "FLOAT",
             "Change": "FLOAT",
-            "Symbol": "VARCHAR(40)",
+            "Symbol": "VARCHAR(300)",
         }
         load_snp500_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
         trans.commit()
