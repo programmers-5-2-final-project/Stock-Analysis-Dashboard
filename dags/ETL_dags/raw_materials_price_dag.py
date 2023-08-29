@@ -10,6 +10,7 @@ from ETL_dags.raw_material.load_data_to_s3 import load_raw_material_price_data_t
 from ETL_dags.raw_material.load_data_to_rds_from_s3 import (
     load_raw_material_price_data_to_rds_from_s3,
 )
+from plugins import slack
 
 from ETL_dags.raw_material.load_data_to_redshift_from_s3 import (
     load_raw_material_price_data_to_redshift_from_s3,
@@ -66,6 +67,7 @@ default_args = {
     "retries": 1,  # 작업이 실패한 경우 재시도 횟수
     "retry_delay": timedelta(minutes=5),  # 작업이 실패한 경우 재시도 간격 = 5분,
     "catchup": True,
+    "on_failure_callback": slack.on_failure_callback,
 }
 
 

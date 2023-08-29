@@ -36,6 +36,9 @@ from ETL_dags.snp500.snp_list.load_data_to_redshift_from_s3 import (
     load_snp_list_data_to_redshift_from_s3,
 )
 
+from plugins import slack
+
+
 task_logger = logging.getLogger("airflow.task")  # airflow log에 남기기 위한 사전작업.
 
 
@@ -91,12 +94,15 @@ def load_snp_stock_list_to_dw_from_s3(_) -> bool:
 
 
 with DAG(
-    dag_id="snp_stock_list_dag12",  # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
+    dag_id="snp_stock_list_dag16",  # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
     doc_md=doc_md,
     catchup=False,
     tags=["API"],
+    default_args={
+        "on_failure_callback": slack.on_failure_callback,
+    },
 ) as dag:
     load_snp_stock_list_to_dw_from_s3(
         load_snp_stock_list_to_s3(transform_snp_stock_list(extract_snp_stock_list()))

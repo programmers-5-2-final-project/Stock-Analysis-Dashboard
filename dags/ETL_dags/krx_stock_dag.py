@@ -36,6 +36,7 @@ from ETL_dags.krx.krx_stock.load_data_to_rds_from_s3 import (
 from ETL_dags.krx.krx_stock.load_data_to_redshift_from_s3 import (
     load_krx_stock_data_to_redshift_from_s3,
 )
+from plugins import slack
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -86,6 +87,9 @@ with DAG(
     doc_md=doc_md,
     schedule="0 0 * * *",
     start_date=days_ago(1),
+    default_args={
+        "on_failure_callback": slack.on_failure_callback,
+    },
 ) as dag:
     krx_list = extract_krx_list()
     load_krx_stock_to_dw_from_s3(

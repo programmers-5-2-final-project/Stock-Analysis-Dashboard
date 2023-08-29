@@ -1,14 +1,11 @@
-# nas_com_info.py
 import pandas as pd
 import os
 import boto3
-import logging
 import psycopg2
 import FinanceDataReader as fdr
 import yfinance as yf
 from io import StringIO
 from dotenv import dotenv_values
-
 from concurrent.futures import ThreadPoolExecutor
 import sys
 import os
@@ -49,27 +46,8 @@ def extract():
         "change",
     ]
 
+
     def getinfo(symbol):
-        # nas_Symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
-        try:
-            nasdaq_tickers = yf.Tickers(symbol)
-            ticker_data = nasdaq_tickers.tickers[symbol].info
-            info = [ticker_data[item] for item in header[:-1]]
-            info.append(round(((info[-1] - info[-2]) / info[-2]) * 100, 4))
-            print(f"Successfully fetched data for symbol {symbol}")
-            return info
-        except Exception as e:
-            print(f"Failed to fetch data for symbol {symbol}. Error: {str(e)}")
-            return [symbol] + [None] * (len(header) - 1)
-
-    df_nas = fdr.StockListing("NASDAQ")
-    nas_Symbols = list(set(df_nas["Symbol"].tolist()))
-
-    company_info_list = []
-    company_info_list.append(header)
-
-    # 각 기업의 정보를 DataFrame에 추가
-    for symbol in nas_Symbols:
         try:
             nasdaq_tickers = yf.Tickers(symbol)
             ticker_data = nasdaq_tickers.tickers[symbol].info

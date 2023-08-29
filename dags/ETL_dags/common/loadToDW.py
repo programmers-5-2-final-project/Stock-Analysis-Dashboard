@@ -1,4 +1,5 @@
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
+
 
 class LoadToRDS:
     def __init__(self, conn):
@@ -10,7 +11,7 @@ class LoadToRDS:
     def create_table(self, schema, table, column_type, primary_key=None):
         query = f"CREATE TABLE {schema}.{table}("
         for column, type in column_type.items():
-            query += f'"{column}" {type},'
+            query += f"{column} {type},"
 
         if primary_key:
             query += f' PRIMARY KEY({primary_key}));'
