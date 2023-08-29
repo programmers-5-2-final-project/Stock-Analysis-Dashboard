@@ -1,15 +1,12 @@
-
-# nas_com_info.py
+# nas_co_info.py
 import pandas as pd
 import os
 import boto3
-import logging
 import psycopg2
 import FinanceDataReader as fdr
 import yfinance as yf
 from io import StringIO
 from dotenv import dotenv_values
-
 from concurrent.futures import ThreadPoolExecutor
 import sys
 import os
@@ -20,12 +17,6 @@ sys.path.append(
         os.path.abspath(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
     )
 )
-
-
-from ETL_dags.common.extract import Extract
-from ETL_dags.common.csv import df_to_csv, csv_to_df
-from ETL_dags.nasdaq.constants import FilePath
-
 
 
 CONFIG = dotenv_values(".env")
@@ -50,16 +41,8 @@ def extract():
         "regularMarketOpen",
         "change",
     ]
+
     def getinfo(symbol):
-    # nas_Symbols = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA"]
-    df_nas = fdr.StockListing("NASDAQ")
-    nas_Symbols = list(set(df_nas["Symbol"].tolist()))
-
-    company_info_list = []
-    company_info_list.append(header)
-
-    # 각 기업의 정보를 DataFrame에 추가
-    for symbol in nas_Symbols:
         try:
             nasdaq_tickers = yf.Tickers(symbol)
             ticker_data = nasdaq_tickers.tickers[symbol].info
@@ -177,4 +160,3 @@ def rds():
 # extract()
 # load()
 # rds()
-
