@@ -78,7 +78,7 @@ def load_krx_stock_data_to_redshift_from_s3(task_logger):
         #     "Code": "VARCHAR(40)",
         # }
         # load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
-        # trans.commit()
+        trans.commit()
     except Exception as e:
         trans.rollback()
         raise e

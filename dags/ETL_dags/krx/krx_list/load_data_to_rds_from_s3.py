@@ -75,7 +75,7 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
         )
 
         task_logger.info("Deleting wrong row")
-        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, "code like '%Code%'")
+        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, '"Code" like \'%Code%\'')
 
         task_logger.info("Altering columns type")
         real_column_type = {

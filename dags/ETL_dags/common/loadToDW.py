@@ -1,6 +1,5 @@
 from sqlalchemy import text
 
-
 class LoadToRDS:
     def __init__(self, conn):
         self.conn = conn
@@ -14,7 +13,7 @@ class LoadToRDS:
             query += f'"{column}" {type},'
 
         if primary_key:
-            query += f" PRIMARY KEY({primary_key}));"
+            query += f' PRIMARY KEY("{primary_key}"));'
         else:
             query = query[:-1] + ");"
         self.conn.execute(text(query))
@@ -67,7 +66,7 @@ class LoadToRedshift:
             query += f'"{column}" {type},'
 
         if primary_key:
-            query += f" PRIMARY KEY({primary_key}));"
+            query += f' PRIMARY KEY("{primary_key}"));'
         else:
             query = query[:-1] + ");"
         self.conn.execute(text(query))
@@ -82,12 +81,11 @@ class LoadToRedshift:
         query = f"""
             COPY dev.{schema}.{table} FROM 's3://{s3_bucket}/{s3_object}' IAM_ROLE 'arn:aws:iam::862327261051:role/service-role/AmazonRedshift-CommandsAccessRole-20230826T161520' FORMAT AS CSV DELIMITER ',' QUOTE '"' REGION AS 'ap-northeast-2';
         """
-        self.conn.execute(text(query))
+        self.conn.execute(text(query).execution_options(autocommit=True))
 
     def delete_wrong_row(self, schema, table, clause):
         query = f"DELETE FROM {schema}.{table} WHERE {clause};"
-        self.conn.execute(text(query))
-
+        self.conn.execute(text(query).execution_options(autocommit=True))
     def alter_column_type(self, schema, table, column_type):
         query = f"ALTER TABLE {schema}.{table} "
         for column, type in column_type.items():
