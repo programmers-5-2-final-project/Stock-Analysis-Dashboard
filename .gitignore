@@ -27,3 +27,6 @@ dags/ETL_dags/snp500/snp_stock/__pycache__
 dags/ETL_dags/raw_material/__pycache__
 
 dags/ELT_dags/__pycache__
+
+dags/plugins/__pycache__
+plugins/__pycache__
