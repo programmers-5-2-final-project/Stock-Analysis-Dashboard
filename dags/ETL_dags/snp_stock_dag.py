@@ -34,6 +34,7 @@ from ETL_dags.snp500.snp_stock.load_data_to_s3 import load_snp_stock_data_to_s3
 from ETL_dags.snp500.snp_stock.load_data_to_rds_from_s3 import (
     load_snp_stock_data_to_rds_from_s3,
 )
+from plugins import slack
 
 
 task_logger = logging.getLogger("airflow.task")  # airflow log에 남기기 위한 사전작업.
@@ -117,6 +118,9 @@ with DAG(
     doc_md=doc_md,
     catchup=False,
     tags=["API"],
+    default_args={
+        "on_failure_callback": slack.on_failure_callback,
+    },
 ) as dag:
     # if __name__ == "__main__":
 
