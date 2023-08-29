@@ -44,6 +44,7 @@ def load_snp_list_data_to_rds_from_s3(task_logger):
             "Name": "VARCHAR(100)",
             "Sector": "VARCHAR(40)",
             "Industry": "VARCHAR(100)",
+            # "test": "VARCHAR(100)",
         }
         primary_key = "Symbol"
         load_snp500_to_rds_from_s3.create_table(

@@ -1,4 +1,4 @@
-from ETL_dags.common.loadToDW import LoadToRDS
+from ETL_dags.common.loadToDW import LoadToDW
 from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
@@ -22,7 +22,6 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
 
     task_logger.info("Creating LoadToDW instance")
     load_krx_to_rds_from_s3 = LoadToDW(db.conn)
-
     try:
         task_logger.info("Installing the aws_s3 extension")
         load_krx_to_rds_from_s3.install_aws_s3_extension()
@@ -40,23 +39,23 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
 
         task_logger.info("Creating the table raw_data.krx_list")
         tmp_column_type = {
-            "Code": "VARCHAR(300)",
-            "ISU_CD": "VARCHAR(300)",
-            "Name": "VARCHAR(300)",
-            "Market": "VARCHAR(300)",
-            "Dept": "VARCHAR(300)",
-            "Close": "VARCHAR(300)",
-            "ChangeCode": "VARCHAR(300)",
-            "Changes": "VARCHAR(300)",
-            "ChangesRatio": "VARCHAR(300)",
-            "Open": "VARCHAR(300)",
-            "High": "VARCHAR(300)",
-            "Low": "VARCHAR(300)",
-            "Volume": "VARCHAR(300)",
-            "Amount": "VARCHAR(300)",
-            "Marcap": "VARCHAR(300)",
-            "Stocks": "VARCHAR(300)",
-            "MarketId": "VARCHAR(300)",
+            "Code": "VARCHAR(40)",
+            "ISU_CD": "VARCHAR(40)",
+            "Name": "VARCHAR(40)",
+            "Market": "VARCHAR(40)",
+            "Dept": "VARCHAR(40)",
+            "Close": "VARCHAR(40)",
+            "ChangeCode": "VARCHAR(40)",
+            "Changes": "VARCHAR(40)",
+            "ChangesRatio": "VARCHAR(40)",
+            "Open": "VARCHAR(40)",
+            "High": "VARCHAR(40)",
+            "Low": "VARCHAR(40)",
+            "Volume": "VARCHAR(40)",
+            "Amount": "VARCHAR(40)",
+            "Marcap": "VARCHAR(40)",
+            "Stocks": "VARCHAR(40)",
+            "MarketId": "VARCHAR(40)",
         }
         primary_key = "Code"
         load_krx_to_rds_from_s3.create_table(
@@ -79,23 +78,23 @@ def load_krx_list_data_to_rds_from_s3(task_logger):
 
         task_logger.info("Altering columns type")
         real_column_type = {
-            "Code": "VARCHAR(300)",
-            "ISU_CD": "VARCHAR(300)",
-            "Name": "VARCHAR(300)",
-            "Market": "VARCHAR(300)",
-            "Dept": "VARCHAR(300)",
-            "Close": "BIGINT",
-            "ChangeCode": "BIGINT",
-            "Changes": "BIGINT",
+            "Code": "VARCHAR(40)",
+            "ISU_CD": "VARCHAR(40)",
+            "Name": "VARCHAR(40)",
+            "Market": "VARCHAR(40)",
+            "Dept": "VARCHAR(40)",
+            "Close": "INTEGER",
+            "ChangeCode": "INTEGER",
+            "Changes": "INTEGER",
             "ChangesRatio": "FLOAT",
-            "Open": "BIGINT",
-            "High": "BIGINT",
-            "Low": "BIGINT",
-            "Volume": "BIGINT",
+            "Open": "INTEGER",
+            "High": "INTEGER",
+            "Low": "INTEGER",
+            "Volume": "INTEGER",
             "Amount": "BIGINT",
             "Marcap": "BIGINT",
             "Stocks": "BIGINT",
-            "MarketId": "VARCHAR(300)",
+            "MarketId": "VARCHAR(40)",
         }
         load_krx_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
         trans.commit()

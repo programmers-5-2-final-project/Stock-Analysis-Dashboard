@@ -34,9 +34,6 @@ from ETL_dags.krx.krx_list.load_data_to_s3 import load_krx_list_data_to_s3
 from ETL_dags.krx.krx_list.load_data_to_rds_from_s3 import (
     load_krx_list_data_to_rds_from_s3,
 )
-from ETL_dags.krx.krx_list.load_data_to_redshift_from_s3 import (
-    load_krx_list_data_to_redshift_from_s3,
-)
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -60,7 +57,7 @@ def transform_krx_list(_):
     """
     task_logger.info("Transform krx_list")
 
-    transform_krx_list_data(task_logger)
+    transformed_df = transform_krx_list_data(task_logger)
 
     return True
 
@@ -84,8 +81,7 @@ def load_krx_list_to_rds_from_s3(_):
     """
     task_logger.info("Load krx_list_to_rds_from_s3")
 
-    # load_krx_list_data_to_rds_from_s3(task_logger)
-    load_krx_list_data_to_redshift_from_s3(task_logger)
+    load_krx_list_data_to_rds_from_s3(task_logger)
 
     return True
 
