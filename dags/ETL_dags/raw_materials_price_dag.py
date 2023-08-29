@@ -18,6 +18,7 @@ from ETL_dags.raw_material.load_data_to_s3 import load_raw_material_price_data_t
 from ETL_dags.raw_material.load_data_to_rds_from_s3 import (
     load_raw_material_price_data_to_rds_from_s3,
 )
+from plugins import slack
 
 task_logger = logging.getLogger("airflow.task")
 
@@ -77,6 +78,9 @@ with DAG(
     schedule="0 0 * * *",
     start_date=days_ago(1),
     # default_args=default_args,
+    default_args={
+        "on_failure_callback": slack.on_failure_callback,
+    },
 ) as dag:
     date = set_start_end_date()
 

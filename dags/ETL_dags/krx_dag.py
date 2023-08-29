@@ -30,6 +30,7 @@ from sqlalchemy import create_engine
 import FinanceDataReader as fdr
 from dotenv import dotenv_values
 import logging
+from plugins import slack
 
 
 task_logger = logging.getLogger(
@@ -144,6 +145,9 @@ with DAG(
     doc_md=doc_md,
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
+    default_args={
+        "on_failure_callback": slack.on_failure_callback,
+    },
 ) as dag:
     CONFIG = dotenv_values(".env")  # .env 파일에 숨겨진 값(AWS ACCESS KEY)을 사용하기 위함.
     if not CONFIG:

@@ -10,6 +10,7 @@ import logging
 from ETL_dags.nasdaq import nas_co_info_, snp_co_info_
 
 task_logger = logging.getLogger("airflow.task")
+from plugins import slack
 
 
 @task
@@ -59,6 +60,9 @@ with DAG(
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
     catchup=False,  # 과거의 task를 실행할지 여부. False로 설정하면, 과거의 task는 실행되지 않습니다.
+    default_args={
+        "on_failure_callback": slack.on_failure_callback,
+    },
 ) as dag:
     (
         extract_nas_co_info()
