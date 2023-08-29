@@ -14,6 +14,7 @@ def extract_snp_stock_data():
 
     def fetch_data(symbol):
         records = []
+        print("get data for {}".format(symbol))
         df = fdr.DataReader(symbol, 2023)
         for index, row in df.iterrows():
             date = index.strftime("%Y-%m-%d")
@@ -34,7 +35,7 @@ def extract_snp_stock_data():
             columns=["Date", "Open", "High", "Low", "Close", "Volume", "Symbol"],
         )
 
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(fetch_data, symbol) for symbol in symbols]
         for future in futures:
             all_dataframes.append(future.result())
