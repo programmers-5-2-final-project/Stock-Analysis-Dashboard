@@ -47,7 +47,7 @@ def load_raw_material_price_to_s3(raw_material):
 
 @task
 def load_raw_material_price_to_dw_from_s3(raw_material):
-    task_logger.info(f"load_{raw_material}_price_to_rds_from_s3")
+    task_logger.info(f"load_{raw_material}_price_to_dw_from_s3")
     load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material)
     load_raw_material_price_data_to_redshift_from_s3(task_logger, raw_material)
 
@@ -70,7 +70,7 @@ default_args = {
 
 
 with DAG(
-    dag_id="raw_materials_dag24",
+    dag_id="raw_materials_dag26",
     schedule="0 0 * * *",
     start_date=days_ago(1),
     default_args=default_args,
@@ -87,7 +87,7 @@ with DAG(
             task_id=f"load_{raw_material}_price_to_s3"
         )(_raw_material)
         result = load_raw_material_price_to_dw_from_s3.override(
-            task_id=f"load_{raw_material}_price_to_rds_from_s3"
+            task_id=f"load_{raw_material}_price_to_dw_from_s3"
         )(_raw_material)
         etl.append(result)
     end(etl)

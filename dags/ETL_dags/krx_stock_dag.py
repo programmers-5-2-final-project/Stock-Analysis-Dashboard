@@ -87,8 +87,7 @@ with DAG(
     schedule="0 0 * * *",
     start_date=days_ago(1),
 ) as dag:
-    # krx_list = extract_krx_list()
-    # load_krx_stock_to_dw_from_s3(
-    #     load_krx_stock_to_s3(transform_krx_stock((extract_krx_stock(krx_list))))
-    # )
-    load_krx_stock_to_dw_from_s3(True)
+    krx_list = extract_krx_list()
+    load_krx_stock_to_dw_from_s3(
+        load_krx_stock_to_s3(transform_krx_stock((extract_krx_stock(krx_list))))
+    )

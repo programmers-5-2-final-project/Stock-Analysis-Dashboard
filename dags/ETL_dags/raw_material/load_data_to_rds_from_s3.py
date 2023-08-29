@@ -98,7 +98,7 @@ def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
         tmp_column_type = tmp_orb_column_type
         real_column_type = real_orb_column_type
 
-    primary_key = "date"
+    primary_key = '"date"'
     load_raw_material_to_rds_from_s3.create_table(
         schema, table, tmp_column_type, primary_key
     )
@@ -122,7 +122,7 @@ def load_raw_material_price_data_to_rds_from_s3(task_logger, raw_material):
 
     task_logger.info("Deleting wrong row")
     load_raw_material_to_rds_from_s3.delete_wrong_row(
-        schema, table, "date like '%date%'"
+        schema, table, "\"date\" like '%date%'"
     )
 
     task_logger.info("Altering columns type")
