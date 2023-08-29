@@ -3,7 +3,11 @@ ETL_dags/krx/.*
 ETL_dags/nasdaq/.*
 ETL_dags/sp500/.*
 
+ETL_dags/krx_dag.py
+ETL_dags/test_dag.py
+
 ELT_dags/common/.*
 ELT_dags/krx/.*
 ELT_dags/nasdaq/.*
 ELT_dags/sp500/.*
+

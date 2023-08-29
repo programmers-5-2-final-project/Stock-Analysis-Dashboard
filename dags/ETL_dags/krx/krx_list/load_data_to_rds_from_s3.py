@@ -1,4 +1,4 @@
-from ETL_dags.common.loadToDW import LoadToDW
+from ETL_dags.common.loadToDW import LoadToRDS
 from ETL_dags.common.db import DB
 from ETL_dags.krx.constants import RDS, AWS
 import sqlalchemy
