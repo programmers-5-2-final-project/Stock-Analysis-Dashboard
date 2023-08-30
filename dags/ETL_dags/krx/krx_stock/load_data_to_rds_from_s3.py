@@ -48,7 +48,7 @@ def load_krx_stock_data_to_rds_from_s3(task_logger):
             "Volume": "VARCHAR(300)",
             "Code": "VARCHAR(300)",
         }
-        primary_key = '"Date", "Code"'
+        primary_key = "Date, Code"
         load_krx_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
@@ -65,7 +65,7 @@ def load_krx_stock_data_to_rds_from_s3(task_logger):
         )
 
         task_logger.info("Deleting wrong row")
-        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, '"Code" like \'%Code%\'')
+        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, "Code like '%Code%'")
 
         task_logger.info("Altering columns type")
         real_column_type = {

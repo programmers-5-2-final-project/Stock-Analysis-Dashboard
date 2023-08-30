@@ -11,10 +11,10 @@ class LoadToRDS:
     def create_table(self, schema, table, column_type, primary_key=None):
         query = f"CREATE TABLE {schema}.{table}("
         for column, type in column_type.items():
-            query += f'"{column}" {type},'
+            query += f"{column} {type},"
 
         if primary_key:
-            query += f' PRIMARY KEY({primary_key}));'
+            query += f" PRIMARY KEY({primary_key}));"
         else:
             query = query[:-1] + ");"
         self.conn.execute(text(query))
@@ -49,7 +49,7 @@ class LoadToRDS:
     def alter_column_type(self, schema, table, column_type):
         query = f"ALTER TABLE {schema}.{table} "
         for column, type in column_type.items():
-            query += f'ALTER COLUMN "{column}" TYPE {type} USING "{column}"::{type},'
+            query += f"ALTER COLUMN {column} TYPE {type} USING {column}::{type},"
         query = query[:-1] + ";"
         self.conn.execute(text(query))
 
@@ -67,7 +67,7 @@ class LoadToRedshift:
             query += f'"{column}" {type},'
 
         if primary_key:
-            query += f' PRIMARY KEY({primary_key}));'
+            query += f" PRIMARY KEY({primary_key}));"
         else:
             query = query[:-1] + ");"
         self.conn.execute(text(query))
@@ -87,6 +87,7 @@ class LoadToRedshift:
     def delete_wrong_row(self, schema, table, clause):
         query = f"DELETE FROM {schema}.{table} WHERE {clause};"
         self.conn.execute(text(query).execution_options(autocommit=True))
+
     def alter_column_type(self, schema, table, column_type):
         query = f"ALTER TABLE {schema}.{table} "
         for column, type in column_type.items():
