@@ -7,6 +7,7 @@ import time
 import billiard as mp
 from concurrent.futures import ThreadPoolExecutor
 
+
 def extract_nas_list_data(task_logger):
     extract = Extract("NASDAQ")
     df = extract.values_of_listed_companies()
@@ -46,8 +47,8 @@ def extract_nas_stock_data(task_logger=None):
     df.to_csv(nas_stock_filepath, index=False)  # index는 저장하지 않음
 
     nas_Symbols_split = []
-    for i in range(0, len(nas_Symbols) // 1000 + 1):
-        nas_Symbols_split.append(nas_Symbols[i * 1000 : (i + 1) * 1000])
+    for i in range(0, len(nas_Symbols) // 500 + 1):
+        nas_Symbols_split.append(nas_Symbols[i * 500 : (i + 1) * 500])
 
     # cpu_count = mp.cpu_count() - 2
     for n, nas_Symbols in enumerate(nas_Symbols_split):
