@@ -51,7 +51,7 @@ def load_krx_co_info_data_to_rds_from_s3(task_logger):
             "HomePage": "VARCHAR(300)",
             "Region": "VARCHAR(300)",
         }
-        primary_key = '"Code"'
+        primary_key = "Code"
         load_krx_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
@@ -68,7 +68,7 @@ def load_krx_co_info_data_to_rds_from_s3(task_logger):
         )
 
         task_logger.info("Deleting wrong row")
-        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, '"Code" like \'%Code%\'')
+        load_krx_to_rds_from_s3.delete_wrong_row(schema, table, "Code like '%Code%'")
 
         task_logger.info("Altering columns type")
         real_column_type = {

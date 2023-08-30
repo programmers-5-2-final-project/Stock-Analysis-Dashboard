@@ -83,7 +83,7 @@ def load_krx_stock_to_dw_from_s3(_):
 
 
 with DAG(
-    dag_id="krx_stock_dag33",
+    dag_id="krx_stock_dag34",
     doc_md=doc_md,
     schedule="0 0 * * *",
     start_date=days_ago(1),
