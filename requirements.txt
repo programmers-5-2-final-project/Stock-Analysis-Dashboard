@@ -13,3 +13,5 @@ psycopg2-binary
 python-dotenv
 redshift_connector
 billiard
+tensorflow
+scikit-learn
