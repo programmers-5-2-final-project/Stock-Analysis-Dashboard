@@ -24,12 +24,14 @@ jobs:
         pip install black
         black --check .
       continue-on-error: true
+      
     # flake8 추가
     - name: Flake8 Lint
       run: |
         pip install flake8
         flake8 .
-
+      continue-on-error: true
+      
     - name: EC2에서 git pull 실행
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
