@@ -3,20 +3,34 @@ name: airflow git pull main
 on:
   push:
     branches:
-      - main  # or whichever branch you prefer
-      
+      - main  # 원하는 브랜치로 변경 가능합니다.
       
 jobs:
-  test-ec2-connection:
+  airflow-ec2-connection:
     runs-on: ubuntu-latest
 
     steps:
-    - name: "context"
+    - name: 코드 체크아웃
+      uses: actions/checkout@v2
+
+    - name: 커밋 ID 컨텍스트
       env:
         COMMIT_ID: ${{ github.sha }}
-      run: echo "Commit id => $COMMIT_ID"
-      
-    - name: Execute git pull on EC2
+      run: echo "커밋 ID => $COMMIT_ID"
+
+    # black formatter 추가
+    - name: Black 코드 포맷 체크
+      run: |
+        pip install black
+        black --check .
+
+    # flake8 추가
+    - name: Flake8 Lint
+      run: |
+        pip install flake8
+        flake8 .
+
+    - name: EC2에서 git pull 실행
       env:
         PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
         HOST: ${{ secrets.EC2_HOST }}
