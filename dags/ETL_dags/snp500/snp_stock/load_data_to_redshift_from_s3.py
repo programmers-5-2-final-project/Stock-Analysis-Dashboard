@@ -1,17 +1,17 @@
 from ETL_dags.common.loadToDW import LoadToRedshift
 from ETL_dags.common.db import DB
-from ETL_dags.snp500.constants import RDS, AWS
+from ETL_dags.snp500.constants import REDSHIFT, AWS
 import sqlalchemy
 
 
 def load_snp_stock_data_to_redshift_from_s3(task_logger):
     task_logger.info("Creating DB instance")
     db = DB(
-        RDS.rds_user.value,
-        RDS.rds_password.value,
-        RDS.rds_host.value,
-        RDS.rds_port.value,
-        RDS.rds_dbname.value,
+        REDSHIFT.redshift_user.value,
+        REDSHIFT.redshift_password.value,
+        REDSHIFT.redshift_host.value,
+        REDSHIFT.redshift_port.value,
+        REDSHIFT.redshift_dbname.value,
     )
 
     task_logger.info("Creating sqlalchemy engine")
@@ -22,11 +22,6 @@ def load_snp_stock_data_to_redshift_from_s3(task_logger):
 
     task_logger.info("Creating LoadToDW instance")
     load_snp500_to_rds_from_s3 = LoadToRedshift(db.conn)
-    try:
-        task_logger.info("Installing the aws_s3 extension")
-        load_snp500_to_rds_from_s3.install_aws_s3_extension()
-    except sqlalchemy.exc.ProgrammingError:
-        task_logger.info("aws_s3 extension already exists")
     # 트랜잭션의 시작
     trans = db.conn.begin()
     try:
@@ -48,7 +43,7 @@ def load_snp_stock_data_to_redshift_from_s3(task_logger):
             "Change": "VARCHAR(300)",
         }
 
-        primary_key = "Date, Symbol"
+        primary_key = '"Date", "Symbol"'
         load_snp500_to_rds_from_s3.create_table(
             schema, table, tmp_column_type, primary_key
         )
@@ -59,14 +54,11 @@ def load_snp_stock_data_to_redshift_from_s3(task_logger):
             table,
             AWS.s3_bucket.value,
             "snp_stock.csv",
-            AWS.region.value,
-            AWS.aws_access_key_id.value,
-            AWS.aws_secret_access_key.value,
         )
 
         task_logger.info("Deleting wrong row")
         load_snp500_to_rds_from_s3.delete_wrong_row(
-            schema, table, "symbol like '%Symbol%'"
+            schema, table, "\"Symbol\" like '%Symbol%'"
         )
 
         # task_logger.info("Altering columns type")
@@ -80,7 +72,7 @@ def load_snp_stock_data_to_redshift_from_s3(task_logger):
         #     "Change": "FLOAT",
         #     "Symbol": "VARCHAR(300)",
         # }
-        load_snp500_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
+        # load_snp500_to_rds_from_s3.alter_column_type(schema, table, real_column_type)
         trans.commit()
 
     except Exception as e:

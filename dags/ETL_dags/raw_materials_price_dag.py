@@ -72,7 +72,7 @@ default_args = {
 
 
 with DAG(
-    dag_id="raw_materials_dag34",
+    dag_id="raw_materials_dag",
     schedule="0 0 * * *",
     start_date=days_ago(1),
     default_args=default_args,

@@ -348,8 +348,8 @@ def krx_ml():
 
 
 with DAG(
-    dag_id="ml_dag_3",
-    schedule="0 0 * * *",
+    dag_id="ml_dag",
+    schedule="0 3 * * *",
     start_date=days_ago(1),
     catchup=False,
 ) as dag:

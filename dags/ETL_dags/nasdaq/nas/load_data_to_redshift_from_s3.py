@@ -79,11 +79,6 @@ def load_nas_stock_data_to_redshift_from_s3(task_logger):
 
     task_logger.info("Creating LoadToDW instance")
     load_nas_stock = LoadToRedshift(db.conn)
-    try:
-        task_logger.info("Installing the aws_s3 extension")
-        load_nas_stock.install_aws_s3_extension()
-    except sqlalchemy.exc.ProgrammingError:
-        task_logger.info("aws_s3 extension already exists")
 
     # 트랜잭션 시작
     trans = db.conn.begin()
@@ -111,10 +106,7 @@ def load_nas_stock_data_to_redshift_from_s3(task_logger):
 
         task_logger.info("Importing from s3")
         load_nas_stock.table_import_from_s3(
-            schema,
-            table,
-            AWS.s3_bucket.value,
-            "nas_stock.csv"
+            schema, table, AWS.s3_bucket.value, "nas_stock.csv"
         )
 
         task_logger.info("Deleting wrong row")
