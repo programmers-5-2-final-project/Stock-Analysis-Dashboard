@@ -76,7 +76,7 @@ def load_krx_stock_to_s3(_):
 @task
 def load_krx_stock_to_dw_from_s3(_):
     task_logger.info("Load krx_stock_to_rds_from_s3")
-    load_krx_stock_data_to_rds_from_s3(task_logger)
+    # load_krx_stock_data_to_rds_from_s3(task_logger)
     load_krx_stock_data_to_redshift_from_s3(task_logger)
 
     return True
