@@ -6,6 +6,7 @@ ETL_dags/sp500/.*
 ETL_dags/krx_dag.py
 ETL_dags/test_dag.py
 ETL_dags/nas_co_info_dag_X.py
+ETL_dags/nas_co_info_dag.py
 
 ELT_dags/common/.*
 ELT_dags/krx/.*

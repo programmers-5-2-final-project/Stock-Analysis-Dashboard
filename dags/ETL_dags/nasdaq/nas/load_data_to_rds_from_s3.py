@@ -115,7 +115,7 @@ def load_nas_stock_data_to_rds_from_s3(task_logger):
             "Symbol": "VARCHAR(300)",
         }
 
-        primary_key = '"Date", "Symbol"'
+        primary_key = "Date, Symbol"
         load_nas_stock.create_table(schema, table, tmp_column_type, primary_key)
 
         task_logger.info("Importing from s3")
@@ -130,7 +130,7 @@ def load_nas_stock_data_to_rds_from_s3(task_logger):
         )
 
         task_logger.info("Deleting wrong row")
-        load_nas_stock.delete_wrong_row(schema, table, "\"Symbol\" like '%Symbol%'")
+        load_nas_stock.delete_wrong_row(schema, table, "Symbol like '%Symbol%'")
 
         task_logger.info("Altering columns type")
         real_column_type = {

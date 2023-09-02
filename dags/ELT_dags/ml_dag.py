@@ -1,4 +1,3 @@
-# ml_dag.py
 import pandas as pd
 import numpy as np
 import sqlalchemy
@@ -43,7 +42,7 @@ def load_data_from_db(query):
 @task
 def snp_ml():
     task_logger.info("snp_ml")
-    new_columns = ["symbol", "tomorrow_close", "mse"]
+    new_columns = ["symbol", "tomorrow_close", "up/down", "diff"]
     df = pd.DataFrame(columns=new_columns)
     data_l = []
 
@@ -92,9 +91,7 @@ def snp_ml():
                 X, y, epochs=20, batch_size=16, verbose=1, callbacks=[lr_scheduler]
             )
 
-            y_pred = model.predict(X)[:-1]
-
-            mse = mean_squared_error(y[:-1], y_pred)
+            today_close = data["close"].iloc[-1]
 
             def update_weights(model, X, y_true):
                 with tf.GradientTape() as tape:
@@ -112,7 +109,11 @@ def snp_ml():
             last_data = last_data.reshape((1, 1, last_data.shape[0]))
             predicted_next_day_close = model.predict(last_data)
             print(f"Predicted Next Day Close: {predicted_next_day_close[0][0]: .4f}")
-            data_l.append([symbol, predicted_next_day_close[0][0], mse])
+            diff = (predicted_next_day_close[0][0] - today_close) / today_close * 100
+            if predicted_next_day_close[0][0] > today_close:
+                data_l.append([symbol, predicted_next_day_close[0][0], "up", diff])
+            else:
+                data_l.append([symbol, predicted_next_day_close[0][0], "down", diff])
         except Exception as e:
             print(e)
 
@@ -145,7 +146,7 @@ def snp_ml():
 @task
 def nas_ml():
     task_logger.info("nas_ml")
-    new_columns = ["symbol", "tomorrow_close", "mse"]
+    new_columns = ["symbol", "tomorrow_close", "up/down", "diff"]
     df = pd.DataFrame(columns=new_columns)
     data_l = []
 
@@ -194,9 +195,7 @@ def nas_ml():
                 X, y, epochs=20, batch_size=16, verbose=1, callbacks=[lr_scheduler]
             )
 
-            y_pred = model.predict(X)[:-1]
-
-            mse = mean_squared_error(y[:-1], y_pred)
+            today_close = data["close"].iloc[-1]
 
             def update_weights(model, X, y_true):
                 with tf.GradientTape() as tape:
@@ -214,7 +213,11 @@ def nas_ml():
             last_data = last_data.reshape((1, 1, last_data.shape[0]))
             predicted_next_day_close = model.predict(last_data)
             print(f"Predicted Next Day Close: {predicted_next_day_close[0][0]: .4f}")
-            data_l.append([symbol, predicted_next_day_close[0][0], mse])
+            diff = (predicted_next_day_close[0][0] - today_close) / today_close * 100
+            if predicted_next_day_close[0][0] > today_close:
+                data_l.append([symbol, predicted_next_day_close[0][0], "up", diff])
+            else:
+                data_l.append([symbol, predicted_next_day_close[0][0], "down", diff])
         except Exception as e:
             print(e)
 
@@ -247,7 +250,7 @@ def nas_ml():
 @task
 def krx_ml():
     task_logger.info("krx_ml")
-    new_columns = ["code", "tomorrow_close", "mse"]
+    new_columns = ["name", "tomorrow_close", "up/down", "diff"]
     df = pd.DataFrame(columns=new_columns)
     data_l = []
 
@@ -295,9 +298,7 @@ def krx_ml():
                 X, y, epochs=20, batch_size=16, verbose=1, callbacks=[lr_scheduler]
             )
 
-            y_pred = model.predict(X)[:-1]
-
-            mse = mean_squared_error(y[:-1], y_pred)
+            today_close = data["close"].iloc[-1]
 
             def update_weights(model, X, y_true):
                 with tf.GradientTape() as tape:
@@ -315,7 +316,11 @@ def krx_ml():
             last_data = last_data.reshape((1, 1, last_data.shape[0]))
             predicted_next_day_close = model.predict(last_data)
             print(f"Predicted Next Day Close: {predicted_next_day_close[0][0]: .4f}")
-            data_l.append([name, predicted_next_day_close[0][0], mse])
+            diff = (predicted_next_day_close[0][0] - today_close) / today_close * 100
+            if predicted_next_day_close[0][0] > today_close:
+                data_l.append([name, predicted_next_day_close[0][0], "up", diff])
+            else:
+                data_l.append([name, predicted_next_day_close[0][0], "down", diff])
         except Exception as e:
             print(e)
 
@@ -348,8 +353,8 @@ def krx_ml():
 
 
 with DAG(
-    dag_id="ml_dag_3",
-    schedule="0 0 * * *",
+    dag_id="ml_dag",
+    schedule="0 3 * * *",
     start_date=days_ago(1),
     catchup=False,
 ) as dag:
