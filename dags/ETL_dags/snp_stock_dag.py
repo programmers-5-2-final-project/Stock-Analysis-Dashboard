@@ -147,4 +147,4 @@ with DAG(
     #     #     _load_snp_stock_to_s3, snp_list, CONFIG
     #     # )
 
-    load_snp_stock_to_rds_from_csv(transform_snp_stock(extract_snp_stock()))
+    transform_snp_stock(extract_snp_stock())

@@ -65,6 +65,6 @@ with DAG(
 ) as dag:
     (
         extract_snp_co_info()
-        >> load_snp_co_info_to_s3()
-        >> load_snp_stock_to_rds_from_s3()
+        # >> load_snp_co_info_to_s3()
+        # >> load_snp_stock_to_rds_from_s3()
     )  # dag의 task를 순서대로 연결해줍니다. >> 를 사용하시면 됩니다.

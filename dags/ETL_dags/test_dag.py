@@ -38,83 +38,83 @@ import logging
 task_logger = logging.getLogger("airflow.task")
 
 
-@task
-def extract_code_list():
-    resultproxy = engine.execute(
-        text("SELECT DISTINCT symbol FROM raw_data.snp_stock;")
-    )
-    symbol_list = []
-    for rowproxy in resultproxy:
-        for _, symbol in rowproxy.items():
-            symbol_list.append(symbol)
-    return symbol_list
+# @task
+# def extract_code_list():
+#     resultproxy = engine.execute(
+#         text("SELECT DISTINCT symbol FROM raw_data.snp_stock;")
+#     )
+#     symbol_list = []
+#     for rowproxy in resultproxy:
+#         for _, symbol in rowproxy.items():
+#             symbol_list.append(symbol)
+#     return symbol_list
 
 
-@task
-def create_table(symbol_list):
-    engine.execute(
-        text(
-            """
-                    DROP TABLE IF EXISTS analytics.snp_partition_of_stock_by_symbol;
-                        """
-        )
-    )
+# @task
+# def create_table(symbol_list):
+#     engine.execute(
+#         text(
+#             """
+#                     DROP TABLE IF EXISTS analytics.snp_partition_of_stock_by_symbol;
+#                         """
+#         )
+#     )
 
-    task_logger.info("create table analytics.snp_partition_of_stock_by_symbol")
-    engine.execute(
-        text(
-            """
-                CREATE TABLE analytics.snp_partition_of_stock_by_symbol(
-                       date DATE,
-                       open FLOAT,
-                       high FLOAT,
-                       low FLOAT,
-                       close FLOAT,
-                       volume FLOAT,
-                       symbol VARCHAR(40),
-                       change FLOAT,
-                       CONSTRAINT PK_krx_partition_of_stock_by_code PRIMARY KEY(date, symbol)
-                ) PARTITION BY LIST(symbol);
-                       """
-        )
-    )
-    return symbol_list
-
-
-@task
-def create_partitioned_tables(symbol_list):
-    for symbol in symbol_list:
-        task_logger.info(f"create partitioned analytics.snp_stock_{symbol}")
-        engine.execute(
-            text(
-                f"""
-                    CREATE TABLE analytics.snp_stock_{symbol}
-                        PARTITION OF analytics.snp_partition_of_stock_by_symbol
-                        FOR VALUES IN ('{symbol}');
-                        """
-            )
-        )
-
-    return True
+#     task_logger.info("create table analytics.snp_partition_of_stock_by_symbol")
+#     engine.execute(
+#         text(
+#             """
+#                 CREATE TABLE analytics.snp_partition_of_stock_by_symbol(
+#                        date DATE,
+#                        open FLOAT,
+#                        high FLOAT,
+#                        low FLOAT,
+#                        close FLOAT,
+#                        volume FLOAT,
+#                        symbol VARCHAR(40),
+#                        change FLOAT,
+#                        CONSTRAINT PK_krx_partition_of_stock_by_code PRIMARY KEY(date, symbol)
+#                 ) PARTITION BY LIST(symbol);
+#                        """
+#         )
+#     )
+#     return symbol_list
 
 
-@task
-def insert_into_table(_):
-    task_logger.info("insert into table from raw_data.snp_stock")
-    engine.execute(
-        text(
-            """
-                    INSERT INTO analytics.snp_partition_of_stock_by_symbol
-                        SELECT *
-                        FROM raw_data.snp_stock;
-                        """
-        )
-    )
-    return True
+# @task
+# def create_partitioned_tables(symbol_list):
+#     for symbol in symbol_list:
+#         task_logger.info(f"create partitioned analytics.snp_stock_{symbol}")
+#         engine.execute(
+#             text(
+#                 f"""
+#                     CREATE TABLE analytics.snp_stock_{symbol}
+#                         PARTITION OF analytics.snp_partition_of_stock_by_symbol
+#                         FOR VALUES IN ('{symbol}');
+#                         """
+#             )
+#         )
+
+#     return True
+
+
+# @task
+# def insert_into_table(_):
+#     task_logger.info("insert into table from raw_data.snp_stock")
+#     engine.execute(
+#         text(
+#             """
+#                     INSERT INTO analytics.snp_partition_of_stock_by_symbol
+#                         SELECT *
+#                         FROM raw_data.snp_stock;
+#                         """
+#         )
+#     )
+#     return True
 
 
 with DAG(
-    dag_id="test_snp_partition_of_stock_by_code1",
+    dag_id="local_test_db2",
     doc_md=doc_md,
     schedule="0 2 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
@@ -137,7 +137,7 @@ with DAG(
     )
     conn = engine.connect()
 
-    insert_into_table(create_partitioned_tables(create_table(extract_code_list())))
+    # insert_into_table(create_partitioned_tables(create_table(extract_code_list())))
 
     # close RDS
     conn.close()

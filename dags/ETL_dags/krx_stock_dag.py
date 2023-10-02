@@ -92,6 +92,5 @@ with DAG(
     },
 ) as dag:
     krx_list = extract_krx_list()
-    load_krx_stock_to_dw_from_s3(
-        load_krx_stock_to_s3(transform_krx_stock((extract_krx_stock(krx_list))))
-    )
+
+    transform_krx_stock((extract_krx_stock(krx_list)))

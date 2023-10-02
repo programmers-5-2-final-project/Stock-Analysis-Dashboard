@@ -84,6 +84,4 @@ with DAG(
         "on_failure_callback": slack.on_failure_callback,
     },
 ) as dag:
-    load_krx_co_info_to_dw_from_s3(
-        load_krx_co_info_to_s3(transform_krx_co_info(extract_krx_co_info()))
-    )
+    transform_krx_co_info(extract_krx_co_info())

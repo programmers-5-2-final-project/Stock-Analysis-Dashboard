@@ -100,6 +100,4 @@ with DAG(
         "on_failure_callback": slack.on_failure_callback,
     },
 ) as dag:
-    load_krx_list_to_dw_from_s3(
-        load_krx_list_to_s3(transform_krx_list(extract_krx_list()))
-    )
+    transform_krx_list(extract_krx_list())

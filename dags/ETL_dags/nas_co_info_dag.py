@@ -59,6 +59,6 @@ with DAG(
     (
         extract_nas_co_info()
         >> transform_nas_co_info()
-        >> load_nas_co_info_to_s3()
-        >> load_nas_co_info_to_rds_from_s3()
+        # >> load_nas_co_info_to_s3()
+        # >> load_nas_co_info_to_rds_from_s3()
     )  # dag의 task를 순서대로 연결해줍니다. >> 를 사용하시면 됩니다.
