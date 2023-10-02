@@ -11,5 +11,8 @@ def transform_snp_list_data(task_logger):
     transformed_snp500 = Transform("S&P500", raw_df)
     transformed_snp500.drop_nan(raw_df.columns.values.tolist())
 
+    task_logger.info("'Symbol' 열에서 '-' 문자열을 '_'로 교체")
+    transformed_snp500.replace_hyphens_to_underscores("Symbol")
+
     task_logger.info("Loading transformed data to csv")
     df_to_csv(transformed_snp500.df, FilePath.data_snp_list_csv.value)

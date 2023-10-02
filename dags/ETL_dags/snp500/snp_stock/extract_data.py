@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 def extract_snp_stock_data():
     snp_list = csv_to_df(FilePath.data_snp_list_csv.value)  # 저장된 기업리스트 불러옴
     symbols = snp_list["Symbol"].tolist()
-
+    symbols.append("BRK-A")
     all_dataframes = []
 
     def fetch_data(symbol):

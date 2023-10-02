@@ -31,8 +31,12 @@ import logging
 from ETL_dags.snp500.snp_stock.extract_data import extract_snp_stock_data
 from ETL_dags.snp500.snp_stock.transform_data import transform_snp_stock_data
 from ETL_dags.snp500.snp_stock.load_data_to_s3 import load_snp_stock_data_to_s3
-from ETL_dags.snp500.snp_stock.load_data_to_rds_from_s3 import (
-    load_snp_stock_data_to_rds_from_s3,
+
+# from ETL_dags.snp500.snp_stock.load_data_to_rds_from_s3 import (
+#     load_snp_stock_data_to_rds_from_s3,
+# )
+from ETL_dags.snp500.snp_stock.load_data_to_rds_from_csv import (
+    load_snp_stock_data_to_rds_from_csv,
 )
 
 from ETL_dags.snp500.snp_stock.load_data_to_redshift_from_s3 import (
@@ -88,35 +92,37 @@ def transform_snp_stock(_) -> bool:  # 기업 단위로 추출한 주식 데이�
     return True
 
 
+# @task
+# def load_snp_stock_to_s3(
+#     _transform_snp_stock: bool,
+# ) -> bool:  # 기업 단위로 S3에 주식 데이터를 로드하는 테스크
+#     """
+#     input: snp500의 심볼리스트, .env 목록
+#     output: S3에 snp_stock.csv 오브젝
+#
+
+#     """
+#     task_logger.info(f"Load_snp_stock_to_s3")
+#     load_snp_stock_data_to_s3(task_logger)
+
+#     return True
+
+
 @task
-def load_snp_stock_to_s3(_) -> bool:  # 기업 단위로 S3에 주식 데이터를 로드하는 테스크
+def load_snp_stock_to_rds_from_csv(_transform_snp_stock_to_s3: bool) -> bool:
     """
-    input: snp500의 심볼리스트, .env 목록
-    output: S3에 snp_stock.csv 오브젝트로 저장
-
-    """
-    task_logger.info(f"Load_snp_stock_to_s3")
-    load_snp_stock_data_to_s3(task_logger)
-
-    return True
-
-
-@task
-def load_snp_stock_to_dw_from_s3(_) -> bool:
-    """
-    input: s3 오브젝트인 snp_stock.csv
+    input: data/snp_stock.csv
     output: rds에 raw_data.snp_stock table 생성
     """
 
-    task_logger.info(f"Load_snp_stock_to_rds_from_s3")
-    # load_snp_stock_data_to_rds_from_s3(task_logger)
-    load_snp_stock_data_to_redshift_from_s3(task_logger)
+    task_logger.info(f"Load_snp_stock_to_rds_from_csv")
+    load_snp_stock_data_to_rds_from_csv(task_logger)
 
     return True
 
 
 with DAG(
-    dag_id="snp_stock_dag",  # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
+    dag_id="local_snp_dag1",  # dag 이름. 코드를 변경하시고 저장하시면 airflow webserver와 동기화 되는데, dag_id가 같으면 dag를 다시 실행할 수 없어, 코드를 변경하시고 dag이름을 임의로 바꾸신후 테스트하시면 편해요. 저는 dag1, dag2, dag3, ... 방식으로 했습니다.
     schedule="0 0 * * *",  # UTC기준 하루단위. 자정에 실행되는 걸로 알고 있습니다.
     start_date=days_ago(1),  # 하루 전으로 설정해서 airflow webserver에서 바로 실행시키도록 했습니다.
     doc_md=doc_md,
@@ -126,6 +132,19 @@ with DAG(
         "on_failure_callback": slack.on_failure_callback,
     },
 ) as dag:
-    load_snp_stock_to_dw_from_s3(
-        load_snp_stock_to_s3(transform_snp_stock(extract_snp_stock()))
-    )
+    #     # if __name__ == "__main__":
+
+    #     # Airflow에서 테스트 시,
+
+    #     # 로컬에서 테스트 시,
+    #     # CONFIG = dotenv_values("../.env")  # .env 파일에 숨겨진 값(AWS ACCESS KEY)을 사용하기 위함.
+
+    #     # 함수의 결과값 인자를 넘겨줌으로써 태스크 간 의존성을 설정함.
+    #     # _extract_snp_stock = extract_snp_stock(snp_list)
+    #     # _transform_snp_stock = transform_snp_stock(_extract_snp_stock, snp_list)
+    #     # _load_snp_stock_to_s3 = load_snp_stock_to_s3(_transform_snp_stock, snp_list, CONFIG)
+    #     # _load_snp_stock_to_rds_from_s3 = load_snp_stock_to_rds_from_s3(
+    #     #     _load_snp_stock_to_s3, snp_list, CONFIG
+    #     # )
+
+    load_snp_stock_to_rds_from_csv(transform_snp_stock(extract_snp_stock()))

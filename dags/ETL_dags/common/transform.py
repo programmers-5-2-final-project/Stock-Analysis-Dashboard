@@ -29,3 +29,6 @@ class Transform:
 
     def pct_change(self, column_y, column_x):
         self.df[column_y] = self.df[column_x].pct_change()
+
+    def replace_hyphens_to_underscores(self, column):
+        self.df[column] = self.df[column].str.replace("-", "")

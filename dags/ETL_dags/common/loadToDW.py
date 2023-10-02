@@ -42,6 +42,13 @@ class LoadToRDS:
         result = self.conn.execute(text(query))
         print(result.fetchall())
 
+    def table_import_from_local(self, schema, table):
+        query = f"""
+            COPY {schema}.{table} FROM 'data/{schema}.csv' DELIMITER ',' CSV HEADER;
+        """
+        result = self.conn.execute(text(query))
+        print(result.fetchall())
+
     def delete_wrong_row(self, schema, table, clause):
         query = f"DELETE FROM {schema}.{table} WHERE {clause};"
         self.conn.execute(text(query))

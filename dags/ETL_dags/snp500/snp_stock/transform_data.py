@@ -25,5 +25,8 @@ def transform_snp_stock_data(task_logger):
     task_logger.info("Filling nan value")
     transformed_snp500.fill_nan(column="Change", value=0)
 
+    task_logger.info("'Symbol' 열에서 '-' 문자열을 '_'로 교체")
+    transformed_snp500.replace_hyphens_to_underscores(column="Symbol")
+
     task_logger.info("Loading transformed data to csv")
     df_to_csv(transformed_snp500.df, FilePath.data_snp_stock_csv.value)
