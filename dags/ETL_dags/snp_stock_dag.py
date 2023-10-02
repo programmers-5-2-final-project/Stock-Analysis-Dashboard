@@ -112,7 +112,7 @@ def transform_snp_stock(_) -> bool:  # 기업 단위로 추출한 주식 데이�
 def load_snp_stock_to_rds_from_csv(_transform_snp_stock_to_s3: bool) -> bool:
     """
     input: data/snp_stock.csv
-    output: rds에 raw_data.snp_stock table 생성
+    output: local rds에 raw_data.snp_stock table 생성
     """
 
     task_logger.info(f"Load_snp_stock_to_rds_from_csv")
