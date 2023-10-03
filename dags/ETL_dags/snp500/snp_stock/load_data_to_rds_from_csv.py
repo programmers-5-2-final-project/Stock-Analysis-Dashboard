@@ -1,4 +1,4 @@
-from ETL_dags.common.loadToDW import LoadToDW
+from ETL_dags.common.loadToDW import LoadToRDS
 from ETL_dags.common.db import DB
 from ETL_dags.snp500.constants import RDS, AWS
 import sqlalchemy
@@ -21,7 +21,7 @@ def load_snp_stock_data_to_rds_from_csv(task_logger):
     db.connect_engine()
 
     task_logger.info("Creating LoadToDW instance")
-    load_snp500_to_rds_from_csv = LoadToDW(db.conn)
+    load_snp500_to_rds_from_csv = LoadToRDS(db.conn)
     # try:
     #     task_logger.info("Installing the aws_s3 extension")
     #     load_snp500_to_rds_from_s3.install_aws_s3_extension()

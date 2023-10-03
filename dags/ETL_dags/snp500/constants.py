@@ -29,9 +29,9 @@ class RDS(Enum):
     rds_dbname = CONFIG["RDS_DB"]
 
 
-class REDSHIFT(Enum):
-    redshift_user = CONFIG["REDSHIFT_USER"]
-    redshift_password = CONFIG["REDSHIFT_PASSWORD"]
-    redshift_host = CONFIG["REDSHIFT_HOST"]
-    redshift_port = CONFIG["REDSHIFT_PORT"]
-    redshift_dbname = CONFIG["REDSHIFT_DB"]
+# class REDSHIFT(Enum):
+#     redshift_user = CONFIG["REDSHIFT_USER"]
+#     redshift_password = CONFIG["REDSHIFT_PASSWORD"]
+#     redshift_host = CONFIG["REDSHIFT_HOST"]
+#     redshift_port = CONFIG["REDSHIFT_PORT"]
+#     redshift_dbname = CONFIG["REDSHIFT_DB"]
