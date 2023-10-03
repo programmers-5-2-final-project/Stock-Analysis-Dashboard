@@ -22,11 +22,11 @@ class AWS(Enum):
 
 
 class RDS(Enum):
-    rds_user = CONFIG["RDS_USER"]
-    rds_password = CONFIG["RDS_PASSWORD"]
-    rds_host = CONFIG["RDS_HOST"]
-    rds_port = CONFIG["RDS_PORT"]
-    rds_dbname = CONFIG["RDS_DB"]
+    rds_user = CONFIG["MYSQL_USER"]
+    rds_password = CONFIG["MYSQL_PASSWORD"]
+    rds_host = CONFIG["MYSQL_HOST"]
+    rds_port = CONFIG["MYSQL_PORT"]
+    rds_dbname = CONFIG["MYSQL_DB"]
 
 
 # class REDSHIFT(Enum):
