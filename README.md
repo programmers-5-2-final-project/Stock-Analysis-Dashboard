@@ -14,18 +14,20 @@
 
 ### 2. 결과물
 #### 대시보드
-![web_dashboard1](https://github.com/team6-group2/movie-data-backend/assets/65884076/65c9acbb-d341-4a83-9d1b-b7f5475e2436)
-![web_dashboard1](https://github.com/team6-group2/movie-data-backend/assets/65884076/65c9acbb-d341-4a83-9d1b-b7f5475e2436)
-![web_dashboard1](https://github.com/team6-group2/movie-data-backend/assets/65884076/65c9acbb-d341-4a83-9d1b-b7f5475e2436)
+![web_dashboard1](https://github.com/sanso62/Readme-Data/blob/main/Stock-Analysis-Dashboard-repo/dashbord_img1.png)
+![web_dashboard2](https://github.com/sanso62/Readme-Data/blob/main/Stock-Analysis-Dashboard-repo/dashbord_img2.png)
+![web_dashboard3](https://github.com/sanso62/Readme-Data/blob/main/Stock-Analysis-Dashboard-repo/dashbord_img3.png)
 #### DAGs
-
+![dags](https://github.com/sanso62/Readme-Data/blob/main/Stock-Analysis-Dashboard-repo/dag_img.png)
 ### 3. 프로젝트 기간 : 2023.08 ~ 2023.09
 ​
 ### 4. 아키텍처
 
-![web_dashboard1](https://github.com/team6-group2/movie-data-backend/assets/65884076/65c9acbb-d341-4a83-9d1b-b7f5475e2436)
+![architecture](https://github.com/sanso62/Readme-Data/blob/main/Stock-Analysis-Dashboard-repo/architecture_img.png)
 
 ### 5. 데이터플로우
+
+![dataflow](https://github.com/sanso62/Readme-Data/blob/main/Stock-Analysis-Dashboard-repo/dataflow_img.png)
 
 ### 6. 기술 스택
 
@@ -48,7 +50,7 @@
 
 ### 8. 프로젝트 설치 및 실행방법 (현재 aws를 내려서 정상 작동하지 않음.)
 ​
-​#### 데이터 파이프라인, Superset
+#### 데이터파이프라인, Superset
 1. 깃 레포지토리 클론
    ```sh
    $ git clone https://github.com/programmers-5-2-final-project/Stock-Analysis-Dashboard.git
